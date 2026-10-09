@@ -1,0 +1,97 @@
+# Handoff policy for the ticketing domain. docs/09-handoff.md.
+#
+# Every threshold tagged PROVISIONAL is a placeholder until week-3 calibration
+# (W3-7, W3-8) replaces it with a value derived from the eval set's score
+# distribution, with a comment naming the run directory it came from. Handoff
+# metrics must not be quoted as final while any PROVISIONAL tag remains.
+version: 1
+
+hard_rules:
+  - id: explicit_human_request
+    match: utterance_pattern
+    # Recall matters more than precision here: a missed request for a human is
+    # the worst handoff failure there is. Every phrasing that has slipped past
+    # gets added, with a test in tests/test_handoff.py.
+    patterns:
+      - "\\b(talk|speak|chat) (to|with) (a |an |the |your |some )?(human|person|agent|representative|rep|someone|somebody|manager|supervisor|real person)\\b"
+      - "\\breal (person|human)\\b"
+      - "\\b(get|give|put) me (through to )?(a |an |the |your )?(manager|supervisor|human|person|someone)\\b"
+      - "\\b(i want|i need|i'd like) (a |an |the |your )?(manager|supervisor|human|person)\\b"
+      - "\\btransfer me\\b"
+      - "\\boperator\\b"
+
+  - id: payment_dispute
+    match: utterance_pattern
+    patterns:
+      - "\\bchargeback\\b"
+      - "\\bdispute(d)? (the |a |this )?charge\\b"
+      - "\\bfraud(ulent)?\\b"
+      - "\\bunauthori[sz]ed\\b"
+
+  - id: distress
+    match: utterance_pattern
+    patterns:
+      - "\\b(emergency|ambulance|heart attack|can'?t breathe|overdose)\\b"
+      - "\\b(kill|hurt) (myself|someone)\\b"
+
+  - id: verification_failed
+    match: state
+    max_failures: 2
+
+  - id: tool_state_unknown
+    match: state
+
+  - id: retrieval_unavailable
+    match: state
+
+  - id: checker_failed_twice
+    match: state
+    max_failures: 2
+
+soft_signals:
+  retrieval_insufficient:
+    weight: 0.45
+    # PROVISIONAL. Raw dense cosine of the best chunk, NOT the fused margin —
+    # the margin is inverted (results/2026-10-08-retrieval-signal-selection/).
+    # 0.65 sits between the lowest covered (0.711) and highest uncovered
+    # (0.563) score in that n=16 study; W3-7 replaces it.
+    threshold_top_vec_score: 0.65   # PROVISIONAL
+
+  entity_confidence_low:
+    weight: 0.30
+    threshold: 0.60                 # PROVISIONAL
+
+  rephrase_repeat:
+    weight: 0.35
+    trigger_count: 2
+    # Cosine on utterance EMBEDDINGS, not word overlap: a caller rephrasing
+    # deliberately uses different words — that is what rephrasing is. Off
+    # when no embedder is available (the harness then has no way to see it).
+    similarity: 0.82                # PROVISIONAL
+
+  checker_failure:
+    weight: 0.40
+
+  tool_failure:
+    weight: 0.50
+
+  budget_exceeded_repeat:
+    weight: 0.30
+    trigger_count: 2
+
+  iteration_cap_reached:
+    weight: 0.45
+
+  llm_failure:
+    weight: 0.60
+
+  negative_sentiment:
+    weight: 0.20
+
+threshold: 0.60       # PROVISIONAL — W3-8
+decay_per_turn: 0.5
+
+checker:
+  # Rule 2: fraction of a policy claim's content words that must appear in the
+  # retrieved chunks for it to count as supported. docs/08 §3.
+  claim_overlap_min: 0.25           # PROVISIONAL

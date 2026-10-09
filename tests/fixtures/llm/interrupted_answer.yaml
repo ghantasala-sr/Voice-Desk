@@ -1,0 +1,14 @@
+# The second sentence is slow, so a barge-in can land between them
+# deterministically. `delay_ms` is a real await, so cancellation behaves
+# exactly as it would against a network stream.
+- text: "Refunds are available within thirty days of purchase. "
+  delay_ms: 10
+- text: "After that the order is final. "
+  delay_ms: 400
+- end:
+    stop_reason: end_turn
+
+# Second response: what the agent says after the caller cuts in.
+- text: "Sorry — which order did you mean? "
+- end:
+    stop_reason: end_turn

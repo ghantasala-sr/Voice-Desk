@@ -1,0 +1,11 @@
+# Beat 3 — an out-of-policy refund demand. The agent explains policy without
+# promising money; the caller asks for a manager; the hard rule fires with NO
+# model call, and the human receives a summary saying what was NOT promised.
+llm_fixture: demo/fixtures/3_handoff.yaml
+stack: {retrieval: real, tools: true, verified: true}
+turns:
+  - user: "I can't make Saturday anymore and I want my money back."
+  - user: "That's ridiculous. Let me talk to a manager."
+expect:
+  stop_reasons: [answered, handoff]
+  outcome: handoff

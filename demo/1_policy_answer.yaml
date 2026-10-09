@@ -1,0 +1,10 @@
+# Beat 1 — a policy question, answered from the real knowledge base, with a
+# citation that is recorded but never spoken, and every segment checked.
+llm_fixture: demo/fixtures/1_policy.yaml
+stack: {retrieval: real, tools: true}
+turns:
+  - user: "Can I get a refund if I can't make it to the show?"
+expect:
+  stop_reasons: [answered]
+  outcome: contained
+  context_invariant: ok

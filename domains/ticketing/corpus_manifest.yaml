@@ -1,0 +1,109 @@
+# The single source of truth about what is indexed.
+#
+# Three documents are HELD OUT at build time (docs/00-decisions.md D4). They
+# are recorded in `documents` with ingested = FALSE and no chunks, so the gap
+# report can distinguish:
+#
+#   "no document covers this topic"        -> write one
+#   "a document exists but is not indexed" -> ingest it
+#
+# The week-4 feedback cycle discovers which held-out topic is actually costing
+# calls and ingests that one. Holding them out BEFORE knowing which gaps matter
+# is what makes the discovery genuine rather than circular.
+
+domain: ticketing
+
+documents:
+  - path: 01-refunds-and-exchanges.md
+    title: Refunds and exchanges
+    topics: [refund, exchange, cancellation_by_customer]
+    ingested: true
+
+  - path: 02-ticket-transfers.md
+    title: Ticket transfers
+    topics: [transfer, gifting, delivery]
+    ingested: true
+
+  - path: 03-event-cancellation-postponement.md
+    title: Event cancellation and postponement
+    topics: [cancellation, postponement, event_status]
+    ingested: true
+
+  - path: 04-delivery-mobile-and-willcall.md
+    title: Ticket delivery, mobile and will-call
+    topics: [delivery, mobile_tickets, willcall, app_problem]
+    ingested: true
+
+  - path: 05-venue-bag-policy.md
+    title: Venue bag policy
+    topics: [bag_policy, venue_logistics, prohibited_items]
+    ingested: true
+
+  - path: 06-venue-parking.md
+    title: Venue parking
+    topics: [parking, venue_logistics, accessibility]
+    ingested: true
+
+  - path: 07-accessibility.md
+    title: Accessibility
+    topics: [accessibility, accessible_seating, service_animals]
+    ingested: true
+
+  - path: 08-payment-and-billing.md
+    title: Payment and billing
+    topics: [payment, fees, billing, duplicate_charge]
+    ingested: true
+
+  - path: 09-resale-and-face-value.md
+    title: Resale and face value
+    topics: [resale, marketplace, face_value]
+    ingested: true
+
+  # --- held out: no indexed document covers these topics at baseline -------
+  - path: 10-group-and-vip-packages.md
+    title: Group bookings and VIP packages
+    topics: [group_booking, vip, hospitality]
+    ingested: false
+    held_out_reason: >
+      Primary baseline coverage gap. Carries the largest share of uncovered
+      caller intent in the simulator (docs/13 §3), so the week-4 gap report
+      should rank it first. Whether it actually does is a real test of the
+      clustering, not a foregone conclusion.
+
+  - path: 11-weather-and-outdoor-events.md
+    title: Weather and outdoor events
+    topics: [weather, outdoor_events, rain_policy]
+    ingested: false
+    held_out_reason: Secondary gap; lower call volume than group bookings.
+
+  - path: 12-age-restrictions-and-id.md
+    title: Age restrictions and ID
+    topics: [age_restriction, id_requirements, minors]
+    ingested: false
+    held_out_reason: >
+      Long-tail gap. Deliberately low volume: if the gap report ranks this
+      above group bookings, the ranking is weighting failure rate over volume
+      and needs fixing.
+
+# Entities that appear across the corpus. Used to build the checker's lexicon
+# (docs/08 §4): a capitalized run that is NOT here and NOT in the caller's own
+# words is a strong hallucination signal.
+venues:
+  - Harbour Pavilion
+  - Kestrel Amphitheatre
+  - Northgate Arena
+  - Lumen Hall
+  - The Foundry
+
+policy_terms:
+  - will-call
+  - face value
+  - resale
+  - service fee
+  - processing fee
+  - print-at-home
+  - timed entry
+  - companion seat
+  - wheelchair space
+  - group desk
+  - authorization hold

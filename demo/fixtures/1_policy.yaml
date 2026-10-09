@@ -1,0 +1,3 @@
+- text: "Tickets are non-refundable once the order is complete [K1]. "
+- text: "You can transfer them to someone else at no charge, or list them on our resale marketplace [K1]. "
+- end: {stop_reason: end_turn, input_tokens: 820, output_tokens: 41, cache_read_tokens: 610}

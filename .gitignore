@@ -1,0 +1,109 @@
+# ---------------------------------------------------------------------------
+# Secrets — never commit these.
+# ---------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.json
+service-account*.json
+
+# ---------------------------------------------------------------------------
+# Python
+# ---------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+.installed.cfg
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# uv
+.uv/
+
+# ---------------------------------------------------------------------------
+# Test / type / lint caches
+# ---------------------------------------------------------------------------
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.hypothesis/
+
+# ---------------------------------------------------------------------------
+# VoiceDesk — generated data
+# ---------------------------------------------------------------------------
+
+# Eval audio is regenerated from the committed manifest (docs/12 §2).
+# The manifest IS committed; the wav files are not.
+eval/dataset/audio/
+eval/dataset/audio_noise/
+eval/dataset/audio_telephony/
+!eval/dataset/audio_manifest.json
+
+# Human calibration recordings are large; keep them out of git and back them
+# up separately. Their manifest is committed.
+eval/dataset/audio_human/*.wav
+!eval/dataset/audio_human/manifest.json
+
+# Downloaded noise sources (CC0). NOISE_SOURCES.md records provenance.
+eval/dataset/noise/
+!eval/dataset/NOISE_SOURCES.md
+
+# Run artifacts: READMEs, config.json, metrics.json and plots ARE committed —
+# they are the record (docs/15). Bulk per-case output is not.
+results/*/raw.jsonl
+results/*/audio/
+results/*/*.wav
+
+# Embedding model weights, cached on first ingest.
+.cache/
+models/
+*.bin
+*.safetensors
+*.onnx
+
+# Local database dumps
+*.sql.gz
+*.dump
+pgdata/
+
+# Logs
+*.log
+logs/
+
+# Traces exported to disk (Jaeger holds the live ones)
+traces/
+
+# ---------------------------------------------------------------------------
+# Editors / OS
+# ---------------------------------------------------------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ---------------------------------------------------------------------------
+# Scratch
+# ---------------------------------------------------------------------------
+scratch/
+tmp/
+notebooks/*.ipynb
+!notebooks/*.committed.ipynb

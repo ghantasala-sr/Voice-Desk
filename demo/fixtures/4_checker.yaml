@@ -1,0 +1,4 @@
+- text: "Mobile tickets are released 48 hours before doors open [K1]. "
+- text: "If you'd like them sooner, there's a 15 dollar early-release fee. "
+- text: "Just say the word and I'll set that up. "
+- end: {stop_reason: end_turn}

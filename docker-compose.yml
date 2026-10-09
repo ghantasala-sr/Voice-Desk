@@ -1,0 +1,38 @@
+# Local infrastructure. Everything except the cloud STT/TTS/LLM APIs runs here.
+# The app itself runs on the host during development (`make dev`) so reload is fast.
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    container_name: voicedesk-postgres
+    environment:
+      POSTGRES_USER: voicedesk
+      POSTGRES_PASSWORD: voicedesk
+      POSTGRES_DB: voicedesk
+    # Host ports are configurable because 5432 is very often already taken by
+    # a native Postgres, and 4317 by another OTLP collector. Override in .env.
+    ports:
+      - "${VD_PG_PORT:-5434}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Files here run in filename order on FIRST start of an empty volume.
+      # To re-apply after a schema change: `make clean && make up`, or
+      # `make migrate` to run them against the existing database.
+      - ./migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U voicedesk -d voicedesk"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: voicedesk-jaeger
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "${VD_JAEGER_UI_PORT:-16687}:16686"   # web UI
+      - "${VD_OTLP_PORT:-4319}:4317"          # OTLP gRPC — where spans go
+
+volumes:
+  pgdata:

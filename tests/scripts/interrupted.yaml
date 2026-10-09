@@ -1,0 +1,11 @@
+# The week-1 demo moment: the caller cuts in mid-answer, and history is
+# rewritten to what they actually heard rather than what we generated.
+llm_fixture: tests/fixtures/llm/interrupted_answer.yaml
+turns:
+  - user: "can I get a refund?"
+    interrupt_at_ms: 120
+    played_chars: 25
+  - user: "no, the other order"
+expect:
+  stop_reasons: [interrupted, answered]
+  context_invariant: ok

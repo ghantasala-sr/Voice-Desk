@@ -1,0 +1,60 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>VoiceDesk console</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="/static/console/console.css?v=2">
+
+<header>
+  <h1>VoiceDesk <span class="dim">console</span></h1>
+  <span id="stream-status" class="pill">connecting…</span>
+  <span id="db-status" class="pill bad" hidden>database unavailable</span>
+  <a class="dim" href="/">browser client →</a>
+</header>
+
+<section id="health" aria-label="Live health">
+  <div class="health-label">
+    <b>live — not a result</b>
+    <span class="dim">last <span id="window">60</span> min · refreshed every 5 s ·
+      numbers quoted anywhere need a run directory (docs/15)</span>
+  </div>
+  <div id="tiles"></div>
+</section>
+
+<main>
+  <aside id="calls-pane">
+    <div class="pane-head">
+      <h2>Calls</h2>
+      <select id="source-filter" aria-label="Filter by source">
+        <option value="">all sources</option>
+        <option>browser</option><option>phone</option><option>replay</option>
+        <option>simulation</option><option>text</option>
+      </select>
+    </div>
+    <button id="follow" class="follow on" title="Auto-select the newest call">following newest</button>
+    <ul id="calls"></ul>
+  </aside>
+
+  <section id="timeline-pane">
+    <div id="call-head"></div>
+    <div id="timeline"></div>
+  </section>
+
+  <aside id="feed-pane">
+    <div class="pane-head">
+      <h2 id="feed-title">Live events · all calls</h2>
+      <label class="dim small"><input type="checkbox" id="hide-partials" checked> hide stt_partial</label>
+    </div>
+    <div id="feed"></div>
+  </aside>
+</main>
+
+<template id="empty-hint">
+  <div class="empty">
+    <p>No calls yet — run <code>make chat</code> or
+      <code>make script FILE=tests/scripts/interrupted.yaml</code></p>
+    <p class="dim">The console tails <code>call_events</code> in Postgres, so calls from any
+      process show up here as they happen.</p>
+  </div>
+</template>
+
+<script src="/static/console/console.js?v=2"></script>

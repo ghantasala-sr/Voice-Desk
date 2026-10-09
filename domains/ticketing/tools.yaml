@@ -1,0 +1,107 @@
+# Tool registry for the ticketing domain. docs/07-tools.md.
+#
+# Endpoints are `mock://` in v1: Python mocks that match the request and
+# response shape of the intended Spring Boot services, so swapping in a real
+# backend is an executor change, not a harness change (docs/00 D1).
+version: 1
+tools:
+  - name: verify_caller
+    description: >
+      Verify the caller's identity using their order number and the email
+      address on the order. Must succeed before any order details are shared.
+    side_effecting: false
+    timeout_ms: 2000
+    endpoint: mock://ticketing.verify_caller
+    parameters:
+      type: object
+      required: [order_id, email]
+      properties:
+        order_id: {type: string, pattern: "^TK-[0-9]{5}$", description: "Order number, e.g. TK-88213"}
+        email: {type: string, format: email}
+
+  - name: lookup_order
+    description: Look up an order's event, seats, ticket count, and delivery status.
+    side_effecting: false
+    requires_verification: true
+    timeout_ms: 2500
+    endpoint: mock://ticketing.lookup_order
+    parameters:
+      type: object
+      required: [order_id]
+      properties:
+        order_id: {type: string, pattern: "^TK-[0-9]{5}$"}
+
+  - name: check_event_status
+    description: Check whether an event is on schedule, postponed, or cancelled.
+    side_effecting: false
+    timeout_ms: 2000
+    endpoint: mock://ticketing.check_event_status
+    parameters:
+      type: object
+      required: [event_id]
+      properties:
+        event_id: {type: string}
+
+  - name: transfer_tickets
+    description: >
+      Transfer tickets from the caller's order to another person's email
+      address. The caller will be asked to confirm before anything happens.
+    side_effecting: true
+    requires_verification: true
+    requires_confirmation: true
+    timeout_ms: 4000
+    endpoint: mock://ticketing.transfer_tickets
+    # The fields that define the action's IDENTITY. Free text is excluded on
+    # purpose: a rephrased reason must not slip past the key (docs/07 §3.1).
+    idempotency_fields: [order_id, quantity, recipient_email]
+    readback_template: >
+      Transferring {quantity} ticket{s} for {event_name} to {recipient_email}.
+      Should I go ahead?
+    parameters:
+      type: object
+      required: [order_id, quantity, recipient_email]
+      properties:
+        order_id: {type: string, pattern: "^TK-[0-9]{5}$"}
+        quantity: {type: integer, minimum: 1, maximum: 10}
+        recipient_email: {type: string, format: email}
+
+  - name: request_refund
+    description: >
+      File a refund request for a colleague to review. This does NOT approve a
+      refund and does not determine any amount. A human reviews every request.
+    side_effecting: true
+    requires_verification: true
+    requires_confirmation: true
+    timeout_ms: 4000
+    endpoint: mock://ticketing.request_refund
+    idempotency_fields: [order_id, reason_code]
+    readback_template: >
+      I'll file a refund request for order {order_id}, for {reason_label}. A
+      colleague reviews it and gets back to you. Shall I file it?
+    # Deliberately NO `amount` parameter. The model cannot name a figure
+    # because the schema gives it nowhere to put one (docs/06 §3).
+    parameters:
+      type: object
+      required: [order_id, reason_code]
+      properties:
+        order_id: {type: string, pattern: "^TK-[0-9]{5}$"}
+        reason_code:
+          type: string
+          enum: [cannot_attend, event_cancelled, event_postponed, duplicate_purchase,
+                 delivery_failure, other]
+        reason_text: {type: string, maxLength: 200}
+
+  - name: create_support_ticket
+    description: Open a support ticket so a human agent follows up with the caller.
+    side_effecting: true
+    requires_verification: false
+    requires_confirmation: false    # harmless, and used on the handoff path
+    timeout_ms: 3000
+    endpoint: mock://ticketing.create_support_ticket
+    idempotency_fields: [category]
+    parameters:
+      type: object
+      required: [category, summary]
+      properties:
+        category: {type: string, enum: [billing, access, delivery, accessibility, other]}
+        summary: {type: string, maxLength: 1000}

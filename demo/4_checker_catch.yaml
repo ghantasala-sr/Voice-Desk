@@ -1,0 +1,9 @@
+# Beat 4 — the model invents a fee. The first sentence is grounded and spoken;
+# the second names a price no retrieved chunk contains, so it is NEVER spoken:
+# a fixed safe line replaces it and generation for the turn stops.
+llm_fixture: demo/fixtures/4_checker.yaml
+stack: {retrieval: real, tools: true}
+turns:
+  - user: "When will my tickets show up in the app?"
+expect:
+  stop_reasons: [answered]

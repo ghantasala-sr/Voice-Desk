@@ -1,0 +1,7 @@
+# make script FILE=tests/scripts/basic.yaml
+llm_fixture: tests/fixtures/llm/refund_two_sentences.yaml
+turns:
+  - user: "can I get a refund if I can't make it?"
+expect:
+  stop_reasons: [answered]
+  context_invariant: ok

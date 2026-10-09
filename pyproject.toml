@@ -1,0 +1,145 @@
+[project]
+name = "voicedesk"
+version = "0.1.0"
+description = "A self-improving real-time voice support agent"
+requires-python = ">=3.12,<3.13"
+
+# NOTE: these are floors, not pins. `uv lock` resolves exact versions into
+# uv.lock, which IS committed. See docs/02-repo-and-tooling.md §2.
+dependencies = [
+    # web
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "websockets>=13",
+    "httpx>=0.27",
+
+    # model providers
+    "anthropic>=0.40",
+    "openai>=1.55",
+
+    # database
+    "psycopg[binary,pool]>=3.2",
+
+    # config / validation
+    "pydantic>=2.9",
+    "pydantic-settings>=2.6",
+    "pyyaml>=6.0",
+
+    # observability
+    "opentelemetry-sdk>=1.28",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.28",
+    "opentelemetry-instrumentation-fastapi>=0.49b0",
+    "structlog>=24.4",
+
+    # utility
+    "typer>=0.13",
+]
+
+[project.optional-dependencies]
+# Week 1 does not need these. They are listed now so the shape of the
+# dependency set is visible, and installed when their week arrives.
+audio = [
+    "pipecat-ai[deepgram,cartesia,silero,websocket]>=0.0.50",
+]
+retrieval = [
+    "pgvector>=0.3",
+    "sentence-transformers>=3.3",
+]
+local-stt = [
+    "faster-whisper>=1.1",
+]
+eval = [
+    "jiwer>=3.0",
+    "soundfile>=0.12",
+    "librosa>=0.10",
+    "numpy>=2.0",
+    "scipy>=1.14",
+    "pandas>=2.2",
+    "matplotlib>=3.9",
+    "scikit-learn>=1.5",
+    "hdbscan>=0.8",
+    "jinja2>=3.1",
+]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "pytest-cov>=6.0",
+    "ruff>=0.8",
+    "mypy>=1.13",
+    "import-linter>=2.1",
+]
+
+# ---------------------------------------------------------------------------
+# uv treats this as a "virtual" project: dependencies are installed into .venv
+# but the repo itself is not built or installed as a wheel. Modules are
+# imported from the working directory, which keeps the flat layout in
+# docs/02-repo-and-tooling.md §1 working without packaging ceremony.
+# ---------------------------------------------------------------------------
+[tool.uv]
+package = false
+
+# ---------------------------------------------------------------------------
+# W1-2 — the architectural contract.
+#
+# This is the rule the whole test strategy rests on: the harness must run
+# without an audio stack. If `harness/` can import pipecat, the text driver
+# stops being possible and every fast test goes with it.
+#
+# Verify it works by adding `import pipecat` to a harness module once and
+# watching `make test` fail. Then revert.
+# ---------------------------------------------------------------------------
+[tool.importlinter]
+root_packages = ["harness", "retrieval", "providers", "app", "analytics", "core"]
+
+[[tool.importlinter.contracts]]
+name = "harness and retrieval are audio-agnostic"
+type = "forbidden"
+source_modules = ["harness", "retrieval"]
+forbidden_modules = ["pipecat", "app", "eval"]
+
+[[tool.importlinter.contracts]]
+name = "providers do not depend on the harness or the app"
+type = "forbidden"
+source_modules = ["providers"]
+forbidden_modules = ["harness", "app", "eval", "pipecat"]
+
+[[tool.importlinter.contracts]]
+name = "core depends on nothing of ours"
+type = "forbidden"
+source_modules = ["core"]
+forbidden_modules = ["harness", "providers", "app", "retrieval", "analytics", "eval"]
+
+# ---------------------------------------------------------------------------
+# Tooling
+# ---------------------------------------------------------------------------
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests", "eval/fault_injection"]
+markers = [
+    "db: requires a running Postgres (skipped unless VD_DATABASE_URL reachable)",
+    "live: calls a real provider API (skipped unless keys are present)",
+]
+filterwarnings = ["error::DeprecationWarning:harness.*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "ASYNC", "RUF"]
+ignore = ["E501"]  # line length is formatted, not linted
+
+[tool.ruff.lint.per-file-ignores]
+# A `timeout=` argument on the text driver is deliberate API design for a
+# test harness, not an accidental reimplementation of asyncio.timeout.
+"eval/text_driver.py" = ["ASYNC109"]
+# Tests may import inside functions to keep the architecture test honest.
+"tests/*" = ["PLC0415"]
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+# Third-party stubs are inconsistent; our own code is what we care about.
+ignore_missing_imports = true

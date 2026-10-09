@@ -1,0 +1,8 @@
+# A clean two-sentence answer. The baseline fixture for harness tests.
+- text: "Tickets for this event are non-refundable unless the event is cancelled. "
+- text: "I can file a request for a colleague to review, if you'd like. "
+- end:
+    stop_reason: end_turn
+    input_tokens: 412
+    output_tokens: 29
+    cache_read_tokens: 380

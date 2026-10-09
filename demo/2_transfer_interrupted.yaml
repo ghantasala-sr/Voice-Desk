@@ -1,0 +1,18 @@
+# Beat 2 — the demo moment. A transfer is read back; the caller talks over it
+# (an interruption during a read-back is a NO); asks again; says yes.
+#
+# Run under the `ambiguous` fault profile: the backend COMMITS and then times
+# out, so the harness genuinely does not know whether the transfer happened and
+# must reconcile instead of retrying. Exactly one transfer, regardless.
+llm_fixture: demo/fixtures/2_transfer.yaml
+stack: {retrieval: real, tools: true, verified: true, fault_profile: ambiguous}
+turns:
+  - user: "I need to send two of my Saturday tickets to my friend, it's friend@example.com"
+  - barge_in: 20
+  - user: "sorry — yes, send two tickets to friend@example.com"
+  - user: "yes"
+expect:
+  stop_reasons: [interrupted, answered, answered]
+  outcome: contained
+  effects: {transfer_tickets: 1}
+  context_invariant: ok

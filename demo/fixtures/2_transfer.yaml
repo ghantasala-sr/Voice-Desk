@@ -1,0 +1,13 @@
+# turn 1: look up the order, then propose the transfer -> read-back
+- tool_call: {name: lookup_order, call_id: tu_lookup, arguments: {order_id: TK-88213}}
+- end: {stop_reason: tool_use}
+- tool_call: {name: transfer_tickets, call_id: tu_transfer_1,
+              arguments: {order_id: TK-88213, quantity: 2, recipient_email: friend@example.com}}
+- end: {stop_reason: tool_use}
+# turn 3 (after the caller cut in on the read-back): the same request again
+- tool_call: {name: transfer_tickets, call_id: tu_transfer_2,
+              arguments: {order_id: TK-88213, quantity: 2, recipient_email: friend@example.com}}
+- end: {stop_reason: tool_use}
+# turn 4: the caller said yes; phrase the outcome
+- text: "Done — the two tickets are on their way to your friend. "
+- end: {stop_reason: end_turn}

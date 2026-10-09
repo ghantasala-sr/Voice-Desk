@@ -1,0 +1,3 @@
+- text: "Tickets are non-refundable unless the event is cancelled by the organizer or postponed [K1]. "
+- text: "I can file a refund request for a colleague to review, but I can't approve it myself. "
+- end: {stop_reason: end_turn}
