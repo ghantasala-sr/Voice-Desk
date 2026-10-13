@@ -89,6 +89,10 @@ class HandoffPolicy:
         self.retrieval_threshold = float(
             soft.get("retrieval_insufficient", {}).get("threshold_top_vec_score", 0.65)
         )
+        # 0.0 disables the strict level when a domain does not configure it.
+        self.very_weak_threshold = float(
+            soft.get("retrieval_very_weak", {}).get("threshold_top_vec_score", 0.0)
+        )
         self.entity_threshold = float(soft.get("entity_confidence_low", {}).get("threshold", 0.6))
         self.rephrase_similarity = float(soft.get("rephrase_repeat", {}).get("similarity", 0.82))
 
@@ -115,11 +119,19 @@ class HandoffPolicy:
 
     # -- signals computed from turn state ----------------------------------
     def retrieval_signal(self, turn: TurnState, *, knowledge_available: bool) -> None:
-        """Raw dense cosine, NOT the fused margin (results/2026-10-08-...)."""
+        """Raw dense cosine, NOT the fused margin. Thresholds from
+        results/2026-10-13-retrieval-calibration/ and -handoff-calibration/."""
         if not knowledge_available:
             return
-        if (turn.retrieval_top_vec_score or 0.0) < self.retrieval_threshold:
+        score = turn.retrieval_top_vec_score or 0.0
+        if score < self.retrieval_threshold:
             _raise(turn, "retrieval_insufficient")
+        # Two levels, because the calibration showed one cannot do both jobs:
+        # a threshold loose enough to catch most gaps flags a third of
+        # answerable questions, so "weak" only contributes, and only "very
+        # weak" may hand off by itself.
+        if score < self.very_weak_threshold:
+            _raise(turn, "retrieval_very_weak")
 
     def entity_confidence_signal(self, turn: TurnState, word_confidences: list[tuple[str, float]]) -> None:
         """Low confidence on a KEY entity — a digit-bearing word, an email, an

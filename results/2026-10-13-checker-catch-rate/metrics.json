@@ -1,0 +1,191 @@
+{
+  "run": "2026-10-13-checker-catch-rate",
+  "catch_by_class": {
+    "numeric": {
+      "value": 1.0,
+      "n": 23,
+      "successes": 23,
+      "ci95": [
+        0.8569,
+        1.0
+      ],
+      "note": ""
+    },
+    "date": {
+      "value": 1.0,
+      "n": 5,
+      "successes": 5,
+      "ci95": [
+        0.5655,
+        1.0
+      ],
+      "note": ""
+    },
+    "entity": {
+      "value": 1.0,
+      "n": 4,
+      "successes": 4,
+      "ci95": [
+        0.5101,
+        1.0
+      ],
+      "note": ""
+    },
+    "policy_claim": {
+      "value": 0.875,
+      "n": 8,
+      "successes": 7,
+      "ci95": [
+        0.5291,
+        0.9776
+      ],
+      "note": ""
+    },
+    "contradiction": {
+      "value": 0.0,
+      "n": 9,
+      "successes": 0,
+      "ci95": [
+        0.0,
+        0.2992
+      ],
+      "note": "declared gap"
+    },
+    "binding": {
+      "value": 0.25,
+      "n": 4,
+      "successes": 1,
+      "ci95": [
+        0.0456,
+        0.6994
+      ],
+      "note": "declared gap"
+    },
+    "citation": {
+      "value": 0.0,
+      "n": 22,
+      "successes": 0,
+      "ci95": [
+        0.0,
+        0.1487
+      ],
+      "note": "not an enforcement target"
+    }
+  },
+  "false_positive_rate": {
+    "value": 0.0435,
+    "n": 46,
+    "successes": 2,
+    "ci95": [
+      0.012,
+      0.1453
+    ]
+  },
+  "rule2_overlap_sweep": [
+    {
+      "claim_overlap_min": 0.25,
+      "policy_claim_caught": {
+        "value": 0.375,
+        "n": 8,
+        "successes": 3,
+        "ci95": [
+          0.1368,
+          0.6943
+        ]
+      },
+      "weak_retrieval_false_positives": {
+        "value": 0.2,
+        "n": 10,
+        "successes": 2,
+        "ci95": [
+          0.0567,
+          0.5098
+        ]
+      }
+    },
+    {
+      "claim_overlap_min": 0.35,
+      "policy_claim_caught": {
+        "value": 0.75,
+        "n": 8,
+        "successes": 6,
+        "ci95": [
+          0.4093,
+          0.9285
+        ]
+      },
+      "weak_retrieval_false_positives": {
+        "value": 0.2,
+        "n": 10,
+        "successes": 2,
+        "ci95": [
+          0.0567,
+          0.5098
+        ]
+      }
+    },
+    {
+      "claim_overlap_min": 0.5,
+      "policy_claim_caught": {
+        "value": 0.875,
+        "n": 8,
+        "successes": 7,
+        "ci95": [
+          0.5291,
+          0.9776
+        ]
+      },
+      "weak_retrieval_false_positives": {
+        "value": 0.2,
+        "n": 10,
+        "successes": 2,
+        "ci95": [
+          0.0567,
+          0.5098
+        ]
+      }
+    },
+    {
+      "claim_overlap_min": 0.65,
+      "policy_claim_caught": {
+        "value": 0.875,
+        "n": 8,
+        "successes": 7,
+        "ci95": [
+          0.5291,
+          0.9776
+        ]
+      },
+      "weak_retrieval_false_positives": {
+        "value": 0.2,
+        "n": 10,
+        "successes": 2,
+        "ci95": [
+          0.0567,
+          0.5098
+        ]
+      }
+    },
+    {
+      "claim_overlap_min": 0.8,
+      "policy_claim_caught": {
+        "value": 0.875,
+        "n": 8,
+        "successes": 7,
+        "ci95": [
+          0.5291,
+          0.9776
+        ]
+      },
+      "weak_retrieval_false_positives": {
+        "value": 0.3,
+        "n": 10,
+        "successes": 3,
+        "ci95": [
+          0.1078,
+          0.6032
+        ]
+      }
+    }
+  ]
+}

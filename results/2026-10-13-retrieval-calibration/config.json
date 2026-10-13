@@ -1,0 +1,36 @@
+{
+  "git_sha": "8d7aef1",
+  "llm": {
+    "provider": "anthropic",
+    "model": "claude-sonnet-5",
+    "temperature": 0.2,
+    "max_tokens": 512
+  },
+  "stt": {
+    "provider": "deepgram"
+  },
+  "tts": {
+    "provider": "cartesia",
+    "voice_id": ""
+  },
+  "embed": {
+    "model": "BAAI/bge-small-en-v1.5"
+  },
+  "retrieval": {
+    "top_k": 4,
+    "rrf_k": 60
+  },
+  "vad": {
+    "stop_secs": 0.4,
+    "start_secs": 0.2,
+    "confidence": 0.7
+  },
+  "budgets": {
+    "turn_budget_ms": 2500,
+    "tool_timeout_ms": 4000,
+    "max_tool_iterations": 3,
+    "playout_trim_ms": 120
+  },
+  "domain": "ticketing",
+  "corpus_hash": "98138b54d0e0e5a5"
+}

@@ -54,8 +54,9 @@ async def test_summary_says_what_was_and_was_not_promised(settings) -> None:
 async def test_weak_retrieval_alone_does_not_hand_off(settings) -> None:
     """One mediocre signal is normal. Escalating on it would push containment
     toward zero."""
+    # 0.65: under the 0.688 "weak" line, above the 0.62 "very weak" one.
     driver, _, _ = tool_driver(settings, ANSWER, handoff_enabled=True,
-                               retriever=FakeRetriever.with_chunks(["x"], top_vec_score=0.50))
+                               retriever=FakeRetriever.with_chunks(["x"], top_vec_score=0.65))
     async with driver:
         result = await driver.say("what's in the VIP package")
 
@@ -80,7 +81,7 @@ async def test_weak_retrieval_plus_a_checker_failure_hands_off(settings) -> None
 
 async def test_old_signals_decay(settings) -> None:
     """A weak retrieval two turns ago counts a quarter of its weight."""
-    weak = FakeRetriever.with_chunks(["x"], top_vec_score=0.50)
+    weak = FakeRetriever.with_chunks(["x"], top_vec_score=0.65)
     driver, _, _ = tool_driver(settings, ANSWER * 3, handoff_enabled=True, retriever=weak)
     async with driver:
         await driver.say("one")
@@ -189,3 +190,34 @@ async def test_summary_carries_policy_from_earlier_turns(settings) -> None:
         await driver.say("let me talk to a manager")
 
     assert driver.call.handoff["summary"]["policy_refs"] == ["Refunds > Eligibility"]
+
+
+@pytest.mark.parametrize("utterance", [
+    "I'm disputing this charge with my card company.",
+    "My card was charged and I didn't authorize it.",
+])
+async def test_payment_dispute_phrasings_found_by_the_week3_eval(settings, utterance) -> None:
+    """Both slipped past the week-2 rules (results/2026-10-13-handoff-calibration/)."""
+    driver, _, _ = tool_driver(settings, ANSWER, handoff_enabled=True)
+    async with driver:
+        await driver.say(utterance)
+    assert driver.call.handoff_reason == "payment_dispute"
+
+
+async def test_very_weak_retrieval_hands_off_alone(settings) -> None:
+    very_weak = FakeRetriever.with_chunks(["Bag policy."], top_vec_score=0.40)
+    driver, _, _ = tool_driver(settings, ANSWER, handoff_enabled=True, retriever=very_weak)
+    async with driver:
+        result = await driver.say("what's in the VIP package")
+    assert "retrieval_very_weak" in result.turn.handoff_signals
+    assert result.stop_reason == "handoff"
+
+
+async def test_merely_weak_retrieval_still_only_contributes(settings) -> None:
+    weak = FakeRetriever.with_chunks(["Refunds..."], top_vec_score=0.65)
+    driver, _, _ = tool_driver(settings, ANSWER, handoff_enabled=True, retriever=weak)
+    async with driver:
+        result = await driver.say("can I get my money back")
+    assert "retrieval_insufficient" in result.turn.handoff_signals
+    assert "retrieval_very_weak" not in result.turn.handoff_signals
+    assert result.stop_reason == "answered"

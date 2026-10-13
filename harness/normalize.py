@@ -112,6 +112,11 @@ def _parse_number_words(run: str) -> int:
 #: never false-alarms on a pronoun.
 WORD_NUMBER_MARK = "~"
 
+_ISO_DATE = re.compile(r"\b(\d{4})-(\d{2})-(\d{2})\b")
+_MONTHS = [
+    "January", "February", "March", "April", "May", "June", "July", "August",
+    "September", "October", "November", "December",
+]
 _CURRENCY = re.compile(r"\$\s?(\d[\d,]*)(?:\.(\d{2}))?")
 _PERCENT = re.compile(r"(\d[\d,.]*)\s?%")
 _RANGE = re.compile(r"(\d[\d,.]*)\s?[-\u2013\u2014]\s?(\d[\d,.]*)")  # hyphen, en dash, em dash
@@ -132,7 +137,13 @@ def canonicalize(text: str, *, mark_word_numbers: bool = False) -> str:
         value = _parse_number_words(match.group(0))
         return f"{WORD_NUMBER_MARK if mark_word_numbers else ''}{value}"
 
-    out = _CURRENCY.sub(currency, text)
+    # ISO dates FIRST. Otherwise the range rule reads "2026-11-14" as
+    # "2026 to 11-14", and an event date returned by a tool can never ground
+    # the agent saying "your show is on November 14".
+    out = _ISO_DATE.sub(
+        lambda m: f"{_MONTHS[int(m.group(2)) - 1]} {int(m.group(3))} {m.group(1)}", text
+    )
+    out = _CURRENCY.sub(currency, out)
     out = _PERCENT.sub(lambda m: f"{m.group(1)} percent", out)
     out = _RANGE.sub(lambda m: f"{m.group(1)} to {m.group(2)}", out)
     out = _THOUSANDS.sub("", out)
@@ -149,7 +160,6 @@ _CITATION = re.compile(r"\s*\[K\d+\]")
 _URL = re.compile(r"https?://\S+|www\.\S+")
 _EMAIL = re.compile(r"\b[\w.+-]+@[\w-]+(?:\.[\w-]+)+\b")
 _ORDER_ID = re.compile(r"\b([A-Z]{2})-(\d{4,8})\b")
-_ISO_DATE = re.compile(r"\b(\d{4})-(\d{2})-(\d{2})\b")
 _MONTH_DAY = re.compile(
     r"\b(January|February|March|April|May|June|July|August|September|October|November|December)"
     r"\s+(\d{1,2})(?:st|nd|rd|th)?\b"
@@ -160,10 +170,6 @@ _DECIMAL = re.compile(r"\b(\d+)\.(\d+)\b")
 _YEAR = re.compile(r"\b(19\d{2}|20\d{2})\b")
 _INTEGER = re.compile(r"\b\d+\b")
 
-_MONTHS = [
-    "January", "February", "March", "April", "May", "June", "July", "August",
-    "September", "October", "November", "December",
-]
 #: Spelled letter by letter. Anything else all-caps is left for TTS to read.
 _ACRONYMS = {"ADA", "ID", "PDF", "VIP", "CPAP", "SMS", "PIN", "ATM", "FAQ", "QR"}
 _DIGIT_WORDS = {str(d): _SMALL[d] for d in range(10)}

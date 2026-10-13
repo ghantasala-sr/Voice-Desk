@@ -342,12 +342,17 @@ class Checker:
             listed = ", ".join(f"{s.type}:{s.surface!r}" for s in ungrounded)
             return self._verdict("fail_ungrounded_entity", spans, f"ungrounded {listed}", started)
 
+        # Rule 2 still applies when the only grounded spans are names the
+        # LEXICON knows. "You must wear smart dress at Lumen Hall" names a real
+        # venue, which proves the venue exists — not the rule. Measured in
+        # results/2026-10-13-checker-catch-rate/.
+        anchored = any(s.source != "lexicon" for s in spans)
+        if not anchored:
+            claim = self._unsupported_claim(segment)
+            if claim:
+                return self._verdict("fail_unsupported_claim", spans, claim, started)
         if spans:
             return self._verdict("pass", spans, "all spans grounded", started)
-
-        claim = self._unsupported_claim(segment)
-        if claim:
-            return self._verdict("fail_unsupported_claim", spans, claim, started)
         return self._verdict("no_checkable_content", spans, "nothing to check", started)
 
     # -- Rule 1 -------------------------------------------------------------
@@ -465,7 +470,8 @@ class Checker:
         """All four conditions are required, because each alone over-fires.
 
         1. a policy modal ("you can", "we never", "any time" ...)
-        2. no grounded span (checked by the caller: we only get here with none)
+        2. nothing anchors it: no span grounded by a chunk, a tool result or
+           the caller (lexicon-known names do not count — see check())
         3. low vocabulary overlap with the retrieved chunks
         4. retrieval was weak
         """

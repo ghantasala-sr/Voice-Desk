@@ -165,6 +165,7 @@ class TextDriver:
         text: str,
         *,
         confidence: float = 1.0,
+        word_confidences: list[tuple[str, float]] | None = None,
         endpoint_ms: int | None = None,
         interrupt_at_ms: int | None = None,
         played_chars: int | None = None,
@@ -178,7 +179,8 @@ class TextDriver:
         """
         self._stream.put(
             TranscriptIn(
-                text=text, confidence=confidence, provider="text", endpoint_ms=endpoint_ms
+                text=text, confidence=confidence, provider="text", endpoint_ms=endpoint_ms,
+                word_confidences=word_confidences or [],
             )
         )
         if interrupt_at_ms is not None:

@@ -1,0 +1,48 @@
+# Shared by tests/test_checker.py and eval/seed_hallucinations.py.
+version: 1
+note: Realistic answers grounded in the shipped corpus. A checker failure on any of these is a FALSE POSITIVE.
+answers:
+- doc: '01'
+  answer: Tickets are non-refundable once the order is complete, but you can transfer them to someone else at no charge.
+- doc: '01'
+  answer: If the organizer cancels, you're refunded automatically to the original payment method within 5 to 7 business days.
+- doc: '01'
+  answer: Your bank may take a further 3 business days to post it.
+- doc: '01'
+  answer: You can exchange up to 7 days before your original event date, and there is no exchange fee.
+- doc: '01'
+  answer: Service fees are refunded in full whenever the ticket price is refunded.
+- doc: '02'
+  answer: Transfers must be accepted before the event start time, so I'd send it at least 2 hours ahead.
+- doc: '02'
+  answer: Will-call orders can't be transferred, but the buyer can change the name on the order for free.
+- doc: '04'
+  answer: Mobile tickets are released 48 hours before doors open.
+- doc: '04'
+  answer: Will-call windows open 90 minutes before doors at most venues.
+- doc: '05'
+  answer: You can bring one bag up to 12 inches by 12 inches by 6 inches.
+- doc: '05'
+  answer: Sealed water bottles up to 500 millilitres are allowed at Kestrel Amphitheatre only.
+- doc: '05'
+  answer: Bag check at Harbour Pavilion is $10 per item.
+- doc: '06'
+  answer: The Harbour Pavilion garage is $25 and opens 2 hours before doors.
+- doc: '06'
+  answer: Preferred parking at Kestrel is $40 and can be bought in advance.
+- doc: '07'
+  answer: Each wheelchair space is sold with one companion seat beside it.
+- doc: '07'
+  answer: Service animals don't need to be registered in advance.
+- doc: 08
+  answer: We accept Visa, Mastercard, American Express, Apple Pay, and Google Pay.
+- doc: 08
+  answer: The processing fee is $3.50 per order.
+- doc: 08
+  answer: A second charge is usually an authorization hold that drops off within 3 to 5 business days.
+- doc: 09
+  answer: Resale prices are capped at face value plus 10 percent on most events.
+- doc: 09
+  answer: The seller pays a 10% fee, taken before the payout reaches your bank.
+- doc: 09
+  answer: Payouts reach your bank 5 to 7 business days after the event.

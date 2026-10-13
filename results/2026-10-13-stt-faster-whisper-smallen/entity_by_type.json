@@ -1,0 +1,226 @@
+{
+  "email": {
+    "clean": {
+      "value": 0.6667,
+      "n": 30,
+      "successes": 20,
+      "ci95": [
+        0.4878,
+        0.8077
+      ]
+    },
+    "snr20": {
+      "value": 0.6333,
+      "n": 30,
+      "successes": 19,
+      "ci95": [
+        0.4551,
+        0.7813
+      ]
+    },
+    "snr10": {
+      "value": 0.5667,
+      "n": 30,
+      "successes": 17,
+      "ci95": [
+        0.392,
+        0.7262
+      ]
+    },
+    "snr5": {
+      "value": 0.4333,
+      "n": 30,
+      "successes": 13,
+      "ci95": [
+        0.2738,
+        0.608
+      ]
+    },
+    "telephony_clean": {
+      "value": 0.6333,
+      "n": 30,
+      "successes": 19,
+      "ci95": [
+        0.4551,
+        0.7813
+      ]
+    },
+    "telephony_snr10": {
+      "value": 0.5,
+      "n": 30,
+      "successes": 15,
+      "ci95": [
+        0.3315,
+        0.6685
+      ]
+    }
+  },
+  "order_id": {
+    "clean": {
+      "value": 1.0,
+      "n": 27,
+      "successes": 27,
+      "ci95": [
+        0.8754,
+        1.0
+      ]
+    },
+    "snr20": {
+      "value": 1.0,
+      "n": 27,
+      "successes": 27,
+      "ci95": [
+        0.8754,
+        1.0
+      ]
+    },
+    "snr10": {
+      "value": 0.963,
+      "n": 27,
+      "successes": 26,
+      "ci95": [
+        0.8172,
+        0.9934
+      ]
+    },
+    "snr5": {
+      "value": 0.7778,
+      "n": 27,
+      "successes": 21,
+      "ci95": [
+        0.5924,
+        0.8939
+      ]
+    },
+    "telephony_clean": {
+      "value": 0.9259,
+      "n": 27,
+      "successes": 25,
+      "ci95": [
+        0.7663,
+        0.9794
+      ]
+    },
+    "telephony_snr10": {
+      "value": 0.8889,
+      "n": 27,
+      "successes": 24,
+      "ci95": [
+        0.7194,
+        0.9615
+      ]
+    }
+  },
+  "quantity": {
+    "clean": {
+      "value": 1.0,
+      "n": 6,
+      "successes": 6,
+      "ci95": [
+        0.6097,
+        1.0
+      ]
+    },
+    "snr20": {
+      "value": 1.0,
+      "n": 6,
+      "successes": 6,
+      "ci95": [
+        0.6097,
+        1.0
+      ]
+    },
+    "snr10": {
+      "value": 1.0,
+      "n": 6,
+      "successes": 6,
+      "ci95": [
+        0.6097,
+        1.0
+      ]
+    },
+    "snr5": {
+      "value": 1.0,
+      "n": 6,
+      "successes": 6,
+      "ci95": [
+        0.6097,
+        1.0
+      ]
+    },
+    "telephony_clean": {
+      "value": 1.0,
+      "n": 6,
+      "successes": 6,
+      "ci95": [
+        0.6097,
+        1.0
+      ]
+    },
+    "telephony_snr10": {
+      "value": 1.0,
+      "n": 6,
+      "successes": 6,
+      "ci95": [
+        0.6097,
+        1.0
+      ]
+    }
+  },
+  "venue": {
+    "clean": {
+      "value": 0.6667,
+      "n": 3,
+      "successes": 2,
+      "ci95": [
+        0.2077,
+        0.9385
+      ]
+    },
+    "snr20": {
+      "value": 0.6667,
+      "n": 3,
+      "successes": 2,
+      "ci95": [
+        0.2077,
+        0.9385
+      ]
+    },
+    "snr10": {
+      "value": 0.6667,
+      "n": 3,
+      "successes": 2,
+      "ci95": [
+        0.2077,
+        0.9385
+      ]
+    },
+    "snr5": {
+      "value": 0.3333,
+      "n": 3,
+      "successes": 1,
+      "ci95": [
+        0.0615,
+        0.7923
+      ]
+    },
+    "telephony_clean": {
+      "value": 0.6667,
+      "n": 3,
+      "successes": 2,
+      "ci95": [
+        0.2077,
+        0.9385
+      ]
+    },
+    "telephony_snr10": {
+      "value": 0.6667,
+      "n": 3,
+      "successes": 2,
+      "ci95": [
+        0.2077,
+        0.9385
+      ]
+    }
+  }
+}

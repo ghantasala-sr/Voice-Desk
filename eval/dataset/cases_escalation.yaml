@@ -1,0 +1,64 @@
+# Extra hand-labelled cases for the HANDOFF metric only (docs/00 D13).
+#
+# The main set has 18 should_escalate positives — a ±20-point confidence
+# interval. This file brings positives to 42 and adds 20 negatives so that
+# precision means something. Candidates would normally come from the week-4
+# caller simulator; these were hand-written in week 3 and are labelled as such.
+#
+# Positives deliberately include phrasings the current rules may NOT catch.
+# A test set that only contains what the rules already match measures nothing.
+version: 1
+source: hand-written, week 3
+
+cases:
+  # ---- positives: held-out topics (uncovered) ---------------------------
+  - {id: esc_hospitality_box, utterance: "Do you do hospitality boxes for a birthday party?", should_escalate: true, reason: retrieval_insufficient, retrieval: uncovered}
+  - {id: esc_meet_greet_price, utterance: "How much extra is the meet and greet upgrade?", should_escalate: true, reason: retrieval_insufficient, retrieval: uncovered}
+  - {id: esc_school_trip_rate, utterance: "We're bringing thirty kids on a school trip. Can we get a rate?", should_escalate: true, reason: retrieval_insufficient, retrieval: uncovered}
+  - {id: esc_group_deposit, utterance: "Is there a deposit to hold seats for a big group?", should_escalate: true, reason: retrieval_insufficient, retrieval: uncovered}
+  - {id: esc_thunder_stop, utterance: "If it starts thundering do they stop the show?", should_escalate: true, reason: retrieval_insufficient, retrieval: uncovered}
+  - {id: esc_storm_warning, utterance: "There's a storm warning for Saturday. Will the concert be called off?", should_escalate: true, reason: retrieval_insufficient, retrieval: uncovered}
+  - {id: esc_lumen_twentyone, utterance: "Is the late session at Lumen Hall twenty-one and over?", should_escalate: true, reason: retrieval_insufficient, retrieval: uncovered}
+  - {id: esc_fifteen_alone, utterance: "Can my fifteen year old go in on her own without me?", should_escalate: true, reason: retrieval_insufficient, retrieval: uncovered}
+  - {id: esc_student_card_id, utterance: "Is a student card okay as ID?", should_escalate: true, reason: retrieval_insufficient, retrieval: uncovered}
+  - {id: esc_club_age_limit, utterance: "What's the age limit for the club night?", should_escalate: true, reason: retrieval_insufficient, retrieval: uncovered}
+
+  # ---- positives: hard-rule paraphrases ---------------------------------
+  - {id: esc_put_through_human, utterance: "Put me through to a human.", should_escalate: true, reason: explicit_human_request, retrieval: n/a}
+  - {id: esc_manager_about_this, utterance: "I want to speak to a manager about this.", should_escalate: true, reason: explicit_human_request, retrieval: n/a}
+  - {id: esc_chat_with_agent, utterance: "Can I chat with an agent?", should_escalate: true, reason: explicit_human_request, retrieval: n/a}
+  - {id: esc_operator, utterance: "Operator.", should_escalate: true, reason: explicit_human_request, retrieval: n/a}
+  - {id: esc_disputing_card, utterance: "I'm disputing this charge with my card company.", should_escalate: true, reason: payment_dispute, retrieval: n/a}
+  - {id: esc_didnt_authorize, utterance: "My card was charged and I didn't authorize it.", should_escalate: true, reason: payment_dispute, retrieval: n/a}
+  - {id: esc_report_fraudulent, utterance: "I'm reporting this as fraudulent.", should_escalate: true, reason: payment_dispute, retrieval: n/a}
+  - {id: esc_heart_attack, utterance: "My friend is having a heart attack in the lobby.", should_escalate: true, reason: distress, retrieval: n/a}
+
+  # ---- positives: judgment, no pattern names them -----------------------
+  - {id: esc_exception_bereavement, utterance: "The tickets were for my dad and he passed away last week. Can you make an exception?", should_escalate: true, reason: refund_outside_policy, retrieval: covered}
+  - {id: esc_interpreter_short_notice, utterance: "I'm deaf and I need a sign language interpreter for Friday's show.", should_escalate: true, reason: accessibility_judgment, retrieval: covered}
+  - {id: esc_fake_tickets_my_name, utterance: "Someone is selling fake tickets online with my name on them.", should_escalate: true, reason: security, retrieval: uncovered}
+  - {id: esc_injured_at_venue, utterance: "I got hurt at the venue last night when a railing gave way.", should_escalate: true, reason: complaint, retrieval: uncovered}
+  - {id: esc_journalist, utterance: "I'm a journalist and I'd like a statement about the cancellation.", should_escalate: true, reason: out_of_scope_human, retrieval: uncovered}
+  - {id: esc_delete_my_data, utterance: "I want my account closed and all my personal data deleted.", should_escalate: true, reason: privacy, retrieval: uncovered}
+
+  # ---- negatives: answerable from the corpus ----------------------------
+  - {id: neg_refund_how_long, utterance: "How long until a refund shows up on my card?", should_escalate: false, retrieval: covered}
+  - {id: neg_mum_pickup_willcall, utterance: "Can my mum pick up my will call tickets for me?", should_escalate: false, retrieval: covered}
+  - {id: neg_transfer_fee, utterance: "Is there a fee to transfer tickets?", should_escalate: false, retrieval: covered}
+  - {id: neg_water_kestrel, utterance: "Can I bring a sealed bottle of water into Kestrel?", should_escalate: false, retrieval: covered}
+  - {id: neg_uber_harbour, utterance: "Where do Ubers pick up at Harbour Pavilion?", should_escalate: false, retrieval: covered}
+  - {id: neg_apple_pay, utterance: "Do you take Apple Pay?", should_escalate: false, retrieval: covered}
+  - {id: neg_processing_fee, utterance: "Why is there a processing fee on my order?", should_escalate: false, retrieval: covered}
+  - {id: neg_guide_dog, utterance: "Can I bring my guide dog?", should_escalate: false, retrieval: covered}
+  - {id: neg_hearing_loop, utterance: "Do you have anything for people who are hard of hearing?", should_escalate: false, retrieval: covered}
+  - {id: neg_tonight_no_tickets, utterance: "The show's tonight and my tickets still aren't in the app.", should_escalate: false, retrieval: covered}
+  - {id: neg_print_tickets, utterance: "Can I print my tickets out instead?", should_escalate: false, retrieval: covered}
+  - {id: neg_resale_max, utterance: "What's the most I'm allowed to resell for?", should_escalate: false, retrieval: covered}
+  - {id: neg_resale_payout_time, utterance: "Do I get paid straight away when my tickets sell?", should_escalate: false, retrieval: covered}
+  - {id: neg_cancel_mistake_transfer, utterance: "I sent a transfer to the wrong person, can I take it back?", should_escalate: false, retrieval: covered}
+  - {id: neg_venue_moved_seats, utterance: "The venue changed — will I keep the same seats?", should_escalate: false, retrieval: covered}
+  - {id: neg_receipt, utterance: "How do I get a receipt for my order?", should_escalate: false, retrieval: covered}
+  - {id: neg_bag_check_lumen, utterance: "Is there somewhere to leave my bag at Lumen Hall?", should_escalate: false, retrieval: covered}
+  - {id: neg_garage_card_only, utterance: "Can I pay cash at the Harbour Pavilion garage?", should_escalate: false, retrieval: covered}
+  - {id: neg_capital_france, utterance: "What's the capital of France?", should_escalate: false, retrieval: uncovered}
+  - {id: neg_tell_joke, utterance: "Tell me a joke while I wait.", should_escalate: false, retrieval: uncovered}

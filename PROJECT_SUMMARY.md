@@ -46,48 +46,48 @@ caller audio ─► Pipecat (VAD, STT, TTS) ─► Harness ─► Claude
 |---|---|---|
 | 1 | Voice loop, harness, barge-in, tracing | Done |
 | 2 | Retrieval, grounding checker, tools, read-back, handoff, fault suite, console | Done |
-| 3 | 50-case eval set, noise/phone audio, STT comparison, threshold calibration | Next |
+| 3 | 50-case eval set, noise/phone audio, STT benchmark, threshold calibration | In progress |
 | 4 | Simulated callers, gap report, one measured improvement cycle | Planned |
 
 ---
 
 ## Measured numbers (usable today)
 
-Every number below came from a test or run in this repo. **n** is shown
-because most of these sets are small; say so if asked.
+Every number below came from a test or a run directory in this repo. **n** is
+shown because most of these sets are small — say so if asked. Week-3 runs
+replaced several week-2 figures; where a number went DOWN, that is because the
+week-3 test set is harder and fairer, and the lower number is the one to use.
 
 | Metric | Result | Source |
 |---|---|---|
-| Duplicate side effects under fault injection | **0** across 26 fault tests, incl. commit-then-timeout and reconciliation-down | `make faults` |
-| Concurrent identical transfers | **5 → 1** side effect, 1 committed row (real Postgres) | `eval/fault_injection/test_postgres_ledger.py` |
-| Grounding checker false positives | **0 / 22** realistic answers against real document chunks | `tests/test_checker.py` |
-| Grounding checker catch, seeded fakes | **8 / 8** invented numbers, prices, percentages, venues, order IDs | `tests/test_checker.py` |
-| Grounding checker latency | **p95 0.07 ms** per sentence (budget 5 ms) | `tests/test_checker.py` |
-| Retrieval accuracy | **12 / 12** top-1 document (small set) | `tests/test_retrieval.py` |
+| Duplicate side effects under fault injection | **0** across 33 fault tests: commit-then-timeout, reconciliation down, concurrent duplicates, interruption mid-read-back | `make faults` |
+| Concurrent identical transfers (real Postgres) | **5 → 1** side effect, 1 committed row | `eval/fault_injection/test_postgres_ledger.py` |
+| Handoff recall / precision (deterministic policy) | **0.86** [0.72, 0.93] / **0.80** [0.66, 0.89], n=79 non-tool cases, 42 positives — up from recall **0.31** before calibration | `results/2026-10-13-handoff-calibration/` |
+| Hard-rule handoffs | **0** LLM calls before handing off | same |
+| Grounding checker, invented numbers / dates / entities | **23/23, 5/5, 4/4** caught | `results/2026-10-13-checker-catch-rate/` |
+| Grounding checker, fabricated policy claims | **7/8** caught (from 1/8 before calibration) | same |
+| Grounding checker false positives | **2/46** correct answers rejected | same |
+| Grounding checker latency | **p95 0.07 ms** per sentence | `tests/test_checker.py` |
+| Retrieval, top-k document accuracy | **12/14** = 0.86 [0.60, 0.96] on caller-phrased questions | `results/2026-10-13-retrieval-calibration/` |
+| Retrieval, top-1 document accuracy | **9/14** = 0.64 [0.39, 0.84] (week 2 said 12/12 on a flattering set) | same |
 | Retrieval latency | **p95 ~20 ms** (budget 40 ms) | `tests/test_retrieval.py` |
-| Hard-rule handoffs ("get me a manager") | **0** LLM calls before handing off | `tests/test_handoff.py` |
-| Test suite | **269** tests, ~19 s, no network | `make test` |
-| Knowledge base | 12 documents, 40 chunks, 3 held out for later | `make ingest` |
+| STT key-entity accuracy, clean → 5 dB | **0.83 → 0.62** (WER only 0.025 → 0.052); emails **0.67 → 0.43** | `results/2026-10-13-stt-faster-whisper-smallen/` |
+| Test suite | **~310** tests, ~20 s | `make test` |
 
-### A finding worth talking about in interviews
+### Findings worth talking about in interviews
 
-The original design used the fused RRF score margin to decide whether
-retrieval found anything relevant. Measured, it was **inverted** — irrelevant
-queries scored *higher* (0.00099 vs 0.00064) — because RRF margins are rank
-arithmetic, not relevance. Raw dense similarity separated cleanly: **0.795 vs
-0.555, no overlap** (n = 16). Written up in
-`results/2026-10-08-retrieval-signal-selection/`.
-
-## Not measured yet — do not put on a resume
-
-| Metric | Why not yet | Comes in |
-|---|---|---|
-| Voice-to-voice latency (ms) | No live audio run yet; replay numbers are not real latency | needs API keys + `make dev` |
-| STT accuracy under noise | Eval audio not built | Week 3 |
-| Handoff precision / recall | Thresholds still provisional; no labelled set | Week 3 |
-| Containment improvement | Needs the caller simulator and a feedback cycle | Week 4 |
-
----
+1. **The planned retrieval-confidence signal was a coin toss.** The fused RRF
+   margin scored AUC **0.53**; raw dense similarity **0.91** (n=64).
+2. **The planned handoff policy caught 31% of cases that needed a human.** Weak
+   retrieval could never hand off on its own (0.45 < 0.6). A second, stricter
+   level took recall to 0.86 without sending everyday refund questions to a
+   human — and the ablation shows that level is now the single biggest
+   contributor.
+3. **A real production bug found by measurement:** ISO dates from tool results
+   were read as number ranges, so the agent could never confirm an event date
+   it had just looked up. No unit test had covered it.
+4. **The week-2 retrieval number was flattered by its own test set** — written
+   by the corpus author in corpus phrasing. Re-measured on caller phrasing.
 
 ## Resume bullets
 
@@ -101,22 +101,28 @@ arithmetic, not relevance. Raw dense similarity separated cleanly: **0.795 vs
   unique index, with reconciliation for commit-then-timeout failures: **0
   duplicate side effects** across a 26-case fault-injection suite covering
   interruptions, timeouts, garbage responses and concurrent duplicates.
-- Built a deterministic per-sentence grounding checker that blocks ungrounded
-  prices, dates and entities before speech at **0.07 ms p95**, with **0
-  false positives** on 22 realistic answers and declared, tested coverage gaps.
-- Measured hybrid retrieval signals and found the planned RRF-margin
-  confidence signal was inverted; switched handoff decisions to raw dense
-  similarity, which separated covered from uncovered queries with no overlap.
+- Built a deterministic per-sentence grounding checker that blocks invented
+  prices, dates and venues before speech at **0.07 ms p95** — **32/32** seeded
+  entity hallucinations caught, **7/8** fabricated policy claims, **2/46**
+  false positives — with its two blind spots (contradictions, wrong-fact
+  numbers) measured and published rather than hidden.
+- Calibrated handoff on a 94-case labelled set: raised recall on cases needing
+  a human from **0.31 to 0.86** (precision 0.80) by replacing the planned
+  RRF-margin signal (AUC 0.53) with raw dense similarity (AUC 0.91) at two
+  thresholds; hard-rule handoffs cost **0** LLM calls.
 - Built a live observability console (FastAPI + Server-Sent Events) showing
   per-turn retrieval scores, checker verdicts, tool state transitions and
   latency stages in real time.
 
-**Fill in after Weeks 3–4 (leave the blanks until measured):**
+- Benchmarked self-hosted Whisper on 900 synthesized call recordings across
+  noise levels and 8 kHz phone audio: WER stayed under 6% while key-entity
+  accuracy fell from **83% to 62%** at 5 dB — spoken emails worst at **43%** —
+  showing WER alone hides the failures that break a support call.
+
+**Fill in after Week 4 / with API keys (leave the blanks until measured):**
 
 - Achieved **X ms p50 / Y ms p95** voice-to-voice latency, with VAD
   endpointing reported separately from harness latency.
-- Benchmarked self-hosted Whisper vs. streaming Deepgram across 4 noise
-  levels and 8 kHz phone audio; entity accuracy fell from **A% to B%** at 5 dB.
 - Built a call-analytics feedback loop that raised containment from **X% to
   Y%** over N simulated calls without increasing the wrong-answer rate.
 

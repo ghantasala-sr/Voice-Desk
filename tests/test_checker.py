@@ -41,28 +41,10 @@ def checker_for(doc: str, *, sufficient: bool = True, caller: list[str] | None =
 # Zero false positives on known-good answers (W2-6 acceptance)
 # ---------------------------------------------------------------------------
 KNOWN_GOOD = [
-    ("01", "Tickets are non-refundable once the order is complete, but you can transfer them to someone else at no charge."),
-    ("01", "If the organizer cancels, you're refunded automatically to the original payment method within 5 to 7 business days."),
-    ("01", "Your bank may take a further 3 business days to post it."),
-    ("01", "You can exchange up to 7 days before your original event date, and there is no exchange fee."),
-    ("01", "Service fees are refunded in full whenever the ticket price is refunded."),
-    ("02", "Transfers must be accepted before the event start time, so I'd send it at least 2 hours ahead."),
-    ("02", "Will-call orders can't be transferred, but the buyer can change the name on the order for free."),
-    ("04", "Mobile tickets are released 48 hours before doors open."),
-    ("04", "Will-call windows open 90 minutes before doors at most venues."),
-    ("05", "You can bring one bag up to 12 inches by 12 inches by 6 inches."),
-    ("05", "Sealed water bottles up to 500 millilitres are allowed at Kestrel Amphitheatre only."),
-    ("05", "Bag check at Harbour Pavilion is $10 per item."),
-    ("06", "The Harbour Pavilion garage is $25 and opens 2 hours before doors."),
-    ("06", "Preferred parking at Kestrel is $40 and can be bought in advance."),
-    ("07", "Each wheelchair space is sold with one companion seat beside it."),
-    ("07", "Service animals don't need to be registered in advance."),
-    ("08", "We accept Visa, Mastercard, American Express, Apple Pay, and Google Pay."),
-    ("08", "The processing fee is $3.50 per order."),
-    ("08", "A second charge is usually an authorization hold that drops off within 3 to 5 business days."),
-    ("09", "Resale prices are capped at face value plus 10 percent on most events."),
-    ("09", "The seller pays a 10% fee, taken before the payout reaches your bank."),
-    ("09", "Payouts reach your bank 5 to 7 business days after the event."),
+    (entry["doc"], entry["answer"])
+    for entry in yaml.safe_load(
+        (Path(__file__).resolve().parent.parent / "eval" / "dataset" / "checker_known_good.yaml").read_text()
+    )["answers"]
 ]
 
 
@@ -189,3 +171,16 @@ def test_checker_is_well_inside_its_budget() -> None:
     p95 = timings[int(len(timings) * 0.95)]
     print(f"\n  checker p95: {p95:.3f} ms (budget 5 ms)")
     assert p95 < 5
+
+
+def test_an_event_date_from_a_tool_result_grounds_the_answer() -> None:
+    """Found by the week-3 catch-rate study: ISO dates were being read as
+    ranges ("2026 to 11-14"), so a looked-up event date could never ground
+    "your show is on November 14" — every date read-back would have been
+    replaced with a safe line."""
+    checker = Checker(
+        GroundingSources(chunks=[], tool_results=['{"event_date": "2026-11-14"}']),
+        lexicon=LEXICON,
+    )
+    assert checker.check("Your show is on November 14.").passed
+    assert not checker.check("Your show is on November 21.").passed
