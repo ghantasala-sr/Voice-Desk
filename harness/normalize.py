@@ -156,7 +156,11 @@ def canonicalize(text: str, *, mark_word_numbers: bool = False) -> str:
 # ---------------------------------------------------------------------------
 # to_spoken — for SPEECH
 # ---------------------------------------------------------------------------
-_CITATION = re.compile(r"\s*\[K\d+\]")
+# One tag or a group: [K1] · [K2, K3] · [K2,K3] · [K2][K3]. Claude writes the
+# first form; Gemini writes the second, which the old single-tag pattern left
+# in the text — and the caller heard "K two, K three".
+_CITATION = re.compile(r"\s*\[\s*K\s*\d+(?:\s*[,;]\s*K?\s*\d+)*\s*\]")
+_CITED_NUMBER = re.compile(r"K?(\d+)")
 _URL = re.compile(r"https?://\S+|www\.\S+")
 _EMAIL = re.compile(r"\b[\w.+-]+@[\w-]+(?:\.[\w-]+)+\b")
 _ORDER_ID = re.compile(r"\b([A-Z]{2})-(\d{4,8})\b")
@@ -184,7 +188,7 @@ def strip_citations(text: str) -> tuple[str, list[int]]:
 
     The model is told to cite; a caller must never hear "K two".
     """
-    tags = [int(m) for m in re.findall(r"\[K(\d+)\]", text)]
+    tags = [int(n) for group in _CITATION.findall(text) for n in _CITED_NUMBER.findall(group)]
     return re.sub(r"\s+([.,!?;:])", r"\1", _CITATION.sub("", text)).strip(), tags
 
 

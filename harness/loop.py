@@ -458,9 +458,10 @@ class Harness:
             payload = self._payload(outcome)
             run.tool_texts.append(json.dumps(payload))
             run.action_note = (
-                f"The caller confirmed {tool}. Result: {json.dumps(payload)}. "
-                "Tell them the outcome in one sentence."
+                f"The caller confirmed {tool} and it has ALREADY been performed. "
+                f"Result: {json.dumps(payload)}. Tell them the outcome in one sentence."
             )
+            run.withheld_tools.add(tool)
             return
 
         if decision == "deny":
@@ -1085,7 +1086,7 @@ class Harness:
                 action_note=run.action_note,
             ),
             messages=messages,
-            tools=self.registry.schemas(),
+            tools=[t for t in self.registry.schemas() if t["name"] not in run.withheld_tools],
             max_tokens=self.settings.llm_max_tokens,
             temperature=self.settings.llm_temperature,
             timeout_ms=self.settings.llm_timeout_ms,
@@ -1287,6 +1288,11 @@ class _TurnRun:
     stop_after_tools: bool = False
     #: The turn is complete before any generation (a re-asked read-back).
     done: bool = False
+    #: Tools withheld from the model this turn. After a confirmed action the
+    #: model only has to REPORT the outcome; offering the same tool again
+    #: invited a second call (Gemini made one every time). The ledger would
+    #: suppress it, but the caller then heard "already gone through".
+    withheld_tools: set[str] = field(default_factory=set)
 
 
 # ---------------------------------------------------------------------------

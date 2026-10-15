@@ -135,3 +135,38 @@ entered the top 4. `tests/test_retrieval.py::test_search_is_deterministic` holds
 2. Ingest group/VIP (the gap report's #4). Then rewrite the refund section (#1) by hand and
    measure that too.
 3. Add Deepgram and Cartesia keys for live voice latency, then record the demo.
+
+---
+
+## Addendum: a live model on Google Cloud Vertex AI
+
+Added after week 4. The agent can now run on a real LLM without an API key, using gcloud
+credentials: **`VD_LLM_PROVIDER=vertex_gemini`** (Gemini 2.5 Flash). Claude on Vertex is
+wired too (`vertex_claude`), but the project `garden-app-sg26` has zero Claude quota, and
+every Claude model returns 429. Details are in [docs/04](docs/04-providers.md).
+
+**What a real model exposed:**
+
+- **Citation tags were spoken.** Gemini groups them (`[K2, K3]`), which the single-tag
+  stripper missed.
+- **Gemini offered to look up an order instead of doing it.** The prompt now says so
+  explicitly.
+- **Gemini re-called a confirmed transfer.** The ledger suppressed the duplicate, as
+  designed, but the caller heard "already gone through". The confirmed tool is now withheld
+  from the reporting call.
+- **The provider ignored the request deadline**, so one turn stalled for 35.8 s. It is now
+  enforced.
+- **Demo 3 had been failing since the week-3 calibration.** "I want my money back" scores
+  0.577, under the 0.62 handoff threshold. The scripts had not been re-run since. The
+  phrasing was changed and the original is recorded in the script as a known
+  false-positive handoff.
+
+**Measured, in scratch runs only (no results directory):**
+
+- The 4-turn order flow succeeded **17 of 21** times at the chosen config.
+- The remaining failures were tool-use lapses and Vertex timeouts.
+- Time to first token on the `global` endpoint: **p50 0.81 s, p95 7.3 s**. The tail is what
+  would break the voice budget.
+
+**Not re-run with Gemini:** the week-4 numbers above still describe the offline agent.
+`make cycle` would re-measure them with Gemini, at roughly 3,000 requests.

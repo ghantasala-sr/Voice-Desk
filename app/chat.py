@@ -66,7 +66,7 @@ from harness.events import (
 )
 from harness.loop import Harness
 from harness.state import CallState, TurnState
-from providers import build_llm, config_snapshot
+from providers import build_llm, config_snapshot, effective_model
 
 log = get_logger(__name__)
 
@@ -124,7 +124,7 @@ def agent_settings(base: Settings) -> tuple[Settings, dict[str, Any]]:
         settings = base.model_copy(update={"llm_provider": "extractive"})
     elif configured == "extractive":
         offline, notice = True, OFFLINE_NOTICE
-    model = "extractive-v1" if settings.llm_provider == "extractive" else settings.llm_model
+    model = effective_model(settings)
     return settings, {
         "configured_provider": configured,
         "provider": settings.llm_provider,

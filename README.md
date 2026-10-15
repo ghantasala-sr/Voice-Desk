@@ -8,12 +8,14 @@ confident.
 The engine is domain-agnostic. The reference deployment is Tier-1 phone support
 for a fictional event-ticketing company, *Tide & Tempo Tickets*.
 
-> **Status:** all four weeks built, plus a web app. 366 tests; every reported
+> **Status:** all four weeks built, plus a web app. 378 tests; every reported
 > number is backed by a run directory in [`results/`](results/). What is and is
 > not verified is spelled out in [WEEK1.md](WEEK1.md), [WEEK2.md](WEEK2.md),
 > [WEEK3.md](WEEK3.md), [WEEK4.md](WEEK4.md). No API key was available while
 > building, so measured agent behaviour is from an **offline extractive agent**,
-> labelled as such everywhere.
+> labelled as such everywhere. The live agent now runs on **Gemini 2.5 Flash on
+> Google Cloud Vertex AI** via gcloud credentials ([docs/04](docs/04-providers.md));
+> the week-4 results have not yet been re-run with it.
 
 ---
 
@@ -67,7 +69,7 @@ flowchart LR
     end
 
     subgraph services["Providers and retrieval"]
-        LLM["LLMProvider<br/>Claude · OpenAI · replay · extractive"]
+        LLM["LLMProvider<br/>Claude · Gemini on Vertex AI ·<br/>OpenAI · replay · extractive"]
         RET["Hybrid search<br/>BM25 + pgvector, RRF"]
         MOCK["Mock ticketing backend<br/>+ fault profiles"]
     end
@@ -116,7 +118,7 @@ flowchart LR
 | Layer | Choice | Why |
 |---|---|---|
 | Audio | Pipecat, Silero VAD | transport, VAD and barge-in events, nothing else |
-| LLM | Claude (default), OpenAI, deterministic replay, offline extractive | replay makes the harness testable without a network; extractive runs the whole system with no key, and says so |
+| LLM | Claude (default), Gemini and Claude on Google Cloud Vertex AI, OpenAI, deterministic replay, offline extractive | Vertex authenticates with gcloud, no key; replay makes the harness testable without a network; extractive runs the whole system with no model, and says so |
 | STT | Deepgram (streaming), faster-whisper (local batch) | comparing them is a result in itself |
 | TTS | Cartesia | lowest time-to-first-byte, which sits inside the latency budget |
 | Retrieval | PostgreSQL + pgvector + full-text, BGE-small embeddings | hybrid, because policy text turns on exact terms like "will-call" |
@@ -542,7 +544,7 @@ make retrieval && make ingest
 ```
 
 ```bash
-make test                 # 366 tests, ~20 s, no network
+make test                 # 378 tests, ~25 s, no network
 make faults               # fault-injection suite
 make demo-scripts         # four scripted demo beats, recorded to Postgres
 make dev                  # web app at http://localhost:8088/ · voice client /voice · console /console
@@ -556,9 +558,19 @@ make cycle                # baseline → gap report → ONE change → identical
 make report               # reports/index.html from every results/*/metrics.json
 ```
 
-With no `ANTHROPIC_API_KEY`, the web app, the voice pipeline and the simulator
-all fall back to the offline extractive agent, and say so in a banner and in
-every result.
+**Gemini on Vertex AI, no API key** — gcloud credentials instead:
+
+```bash
+pip install -e ".[vertex]"               # google-genai + anthropic[vertex]
+gcloud auth application-default login
+printf 'VD_LLM_PROVIDER=vertex_gemini\nVD_LLM_MODEL=gemini-2.5-flash\nVD_GCP_PROJECT=<project>\n' >> .env
+.venv/bin/python -m eval.text_driver --script demo/1_policy_answer.yaml --live   # the demo beat, on Gemini
+```
+
+`VD_LLM_PROVIDER=vertex_claude` runs Claude on Vertex the same way, once the
+project has Claude quota. With neither Vertex nor an `ANTHROPIC_API_KEY`, the web
+app, the voice pipeline and the simulator fall back to the offline extractive
+agent, and say so in a banner and in every result.
 
 Ports avoid common collisions: 5434, 8088, 16687 and 4319 rather than 5432,
 8000, 16686 and 4317. All are overridable in `.env`.
@@ -570,7 +582,7 @@ Ports avoid common collisions: 5434, 8088, 16687 and 4319 rather than 5432,
 ```
 app/            FastAPI, /ws, Pipecat wiring (the only pipecat import), console, web app (/ws/chat, insights API)
 harness/        turn loop, state, checker, normalization, handoff, tools, read-back, assembly
-providers/      LLM (Claude, OpenAI, replay, extractive) · STT (Deepgram, faster-whisper, null) · TTS (Cartesia, null)
+providers/      LLM (Claude, Vertex Gemini/Claude, OpenAI, replay, extractive) · STT (Deepgram, faster-whisper, null) · TTS (Cartesia, null)
 retrieval/      chunking, corpus linter, embeddings, ingestion, hybrid search
 analytics/      event writer (closed vocabulary), persistence, gap report, static report
 core/           settings, ids, clock, logging, db, tracing — depends on nothing of ours

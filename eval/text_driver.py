@@ -57,7 +57,7 @@ from harness.loop import Harness
 from harness.retriever import Retriever
 from harness.state import CallState, TurnState
 from harness.tools.execution import ToolExecutor
-from providers import build_llm, config_snapshot
+from providers import build_llm, config_snapshot, effective_model, offline_fallback
 from providers.llm.base import LLMProvider
 
 
@@ -279,7 +279,7 @@ async def open_recording(settings: Settings, *, enabled: bool) -> tuple[Any, Any
 # ---------------------------------------------------------------------------
 # Script runner
 # ---------------------------------------------------------------------------
-async def run_script(path: Path, *, record: bool = True) -> int:
+async def run_script(path: Path, *, record: bool = True, live: bool = False) -> int:
     """Run a scripted conversation and check its expectations.
 
         llm_fixture: tests/fixtures/llm/x.yaml
@@ -308,7 +308,13 @@ async def run_script(path: Path, *, record: bool = True) -> int:
     domain = spec.get("domain") or settings.domain
     stack_spec = spec.get("stack", {})
 
-    fixture = spec.get("llm_fixture")
+    # --live ignores the fixture and runs the configured model, so the same
+    # beats can be checked against a real LLM. A fixture-backed run says
+    # nothing about any model; it tests the harness.
+    fixture = None if live else spec.get("llm_fixture")
+    if live:
+        settings = offline_fallback(settings)
+        print(f"  [live model: {settings.llm_provider} · {effective_model(settings)}]")
     llm = (
         build_llm(settings.model_copy(update={"llm_provider": "replay"}), fixture=fixture)
         if fixture
@@ -452,13 +458,15 @@ def main() -> int:
         "--no-record", action="store_true", help="do not write the call to Postgres"
     )
     parser.add_argument("--script", type=Path, default=None)
+    parser.add_argument("--live", action="store_true",
+                        help="with --script: ignore llm_fixture, use the configured model")
     args = parser.parse_args()
 
     settings = get_settings()
     configure_logging(level=settings.log_level, json_output=settings.log_json)
 
     if args.script:
-        return asyncio.run(run_script(args.script, record=not args.no_record))
+        return asyncio.run(run_script(args.script, record=not args.no_record, live=args.live))
     return asyncio.run(
         run_interactive(
             args.domain, use_retrieval=not args.no_retrieval, record=not args.no_record

@@ -352,7 +352,13 @@ const Talk = {
       banner.title = agent.notice || "";
     } else {
       banner.className = "banner claude";
-      append(banner, el("b", null, "Claude"), ` — ${agent.provider}:${agent.model}`);
+      // Name the family that actually runs — never assume Claude.
+      const model = agent.model || "";
+      const family = model.startsWith("gemini") ? "Gemini"
+        : model.startsWith("claude") ? "Claude"
+        : model.startsWith("gpt") || agent.provider === "openai" ? "OpenAI" : "Live model";
+      const where = agent.provider.startsWith("vertex_") ? " on Google Cloud Vertex AI" : "";
+      append(banner, el("b", null, family), ` — ${model}${where}`);
     }
     banner.hidden = false;
   },

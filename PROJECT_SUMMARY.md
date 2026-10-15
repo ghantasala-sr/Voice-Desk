@@ -83,7 +83,7 @@ whenever you quote one.
 | Feedback cycle: containment *(300 simulated calls, offline agent)* | **0.737 → 0.793**; paired **+17 / −0**, McNemar p = 1.5 × 10⁻⁵ | `results/2026-10-15-feedback-cycle/` |
 | Feedback cycle: wrong-answer rate (guardrail) | **0.136 → 0.113** — did not rise | same |
 | Gap report vs hidden labels | **3/3** planted gaps found (ranks 2, 4, 5); 1/3 in the top 3; cluster purity 0.985 | `results/2026-10-15-gap-report-cycle-before/` |
-| Test suite | **366** tests, ~20 s | `make test` |
+| Test suite | **378** tests, ~25 s | `make test` |
 
 ### Findings worth talking about in interviews
 

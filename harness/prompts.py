@@ -48,6 +48,7 @@ def static_system_prompt(domain: str) -> str:
         config["grounding"].strip(),
         config["authority"].strip(),
         config["verification"].strip(),
+        *([config["tools"].strip()] if config.get("tools") else []),
     ]
     return "\n\n".join(sections)
 

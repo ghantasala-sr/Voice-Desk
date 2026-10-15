@@ -15,7 +15,9 @@ from typing import Literal
 from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-LLMProviderName = Literal["anthropic", "openai", "replay", "extractive"]
+LLMProviderName = Literal[
+    "anthropic", "openai", "replay", "extractive", "vertex_gemini", "vertex_claude"
+]
 STTProviderName = Literal["deepgram", "faster_whisper", "null"]
 TTSProviderName = Literal["cartesia", "null"]
 
@@ -38,6 +40,14 @@ class Settings(BaseSettings):
     # -- provider selection -------------------------------------------------
     llm_provider: LLMProviderName = Field("anthropic", validation_alias="VD_LLM_PROVIDER")
     llm_model: str = Field("claude-sonnet-5", validation_alias="VD_LLM_MODEL")
+    # Google Cloud Vertex AI. Auth is gcloud Application Default Credentials
+    # (`gcloud auth application-default login`), never a key in .env. The
+    # project falls back to GOOGLE_CLOUD_PROJECT, then `gcloud config`.
+    gcp_project: str | None = Field(None, validation_alias="VD_GCP_PROJECT")
+    vertex_location: str = Field("global", validation_alias="VD_VERTEX_LOCATION")
+    # Gemini thinking tokens. None = provider default (0 on 2.5 Flash, where it
+    # can be switched off; the model's own default elsewhere).
+    llm_thinking_budget: int | None = Field(None, validation_alias="VD_LLM_THINKING_BUDGET")
     llm_temperature: float = Field(0.2, validation_alias="VD_LLM_TEMPERATURE")
     llm_max_tokens: int = Field(512, validation_alias="VD_LLM_MAX_TOKENS")
     llm_timeout_ms: int = Field(10_000, validation_alias="VD_LLM_TIMEOUT_MS")

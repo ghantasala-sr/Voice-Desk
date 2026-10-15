@@ -48,6 +48,12 @@ retrieval = [
 local-stt = [
     "faster-whisper>=1.1",
 ]
+vertex = [
+    # Google Cloud Vertex AI: Gemini (google-genai) and Claude (AnthropicVertex).
+    # Auth is gcloud Application Default Credentials, not a key.
+    "google-genai>=1.20",
+    "anthropic[vertex]>=0.40",
+]
 eval = [
     "jiwer>=3.0",
     "soundfile>=0.12",

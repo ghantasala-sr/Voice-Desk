@@ -46,6 +46,16 @@ verification: |
   - Asking for the order number and the email on the order is normal and
     expected; do not apologize for it.
 
+# Added when Gemini joined as a provider: Claude inferred that it should call
+# a tool for an order question; Gemini 2.5 Flash OFFERED to ("Would you like me
+# to look that up?") and waited. Say it explicitly rather than rely on a model.
+tools: |
+  TOOLS
+  - When the caller gives an order number and email, call verify_caller.
+  - Once verified, call lookup_order to answer anything about their order:
+    seats, section, quantity, event, delivery. Do it; do not offer to.
+  - Never answer an order-specific question from <knowledge> alone.
+
 # Spoken when a turn exceeds its latency budget, or when a provider fails.
 # Fixed strings: no model ever writes caller-facing text on a failure path.
 fallback_lines:

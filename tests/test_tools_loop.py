@@ -170,3 +170,20 @@ async def test_tool_outcome_unknown_is_a_hard_handoff(settings) -> None:
     assert driver.call.handoff_reason == "tool_state_unknown"
     assert "may or may not" in driver.call.handoff["summary"]["suggested_next_step"]
     assert backend.count_effects() == 1  # it did happen upstream
+
+
+async def test_the_confirmed_tool_is_not_offered_again_to_report_it(settings) -> None:
+    """After a confirmed action the model only reports the outcome. Offering
+    the same tool again let Gemini call it a second time every time; the
+    ledger suppressed it, and the caller heard 'already gone through'."""
+    events = [*TRANSFER, say("Done — they're on their way. "), end()]
+    driver, backend, _ = tool_driver(settings, events)
+    async with driver:
+        await driver.say("send two tickets to friend@example.com")
+        await driver.say("yes")
+
+    follow_up = driver.harness.llm.requests[-1]
+    assert "transfer_tickets" not in [t["name"] for t in follow_up.tools]
+    assert "lookup_order" in [t["name"] for t in follow_up.tools], "only the done action is withheld"
+    assert "ALREADY been performed" in follow_up.system_dynamic
+    assert backend.count_effects("transfer_tickets") == 1

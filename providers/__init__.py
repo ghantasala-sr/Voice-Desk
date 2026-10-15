@@ -16,6 +16,20 @@ from providers.stt.base import STTProvider
 from providers.tts.base import TTSProvider
 
 
+def effective_model(settings: Settings) -> str:
+    """The model that will actually run. VD_LLM_MODEL defaults to a Claude id;
+    with a Gemini provider that means "not chosen", so Gemini's default applies.
+    Used by the provider, the config snapshot and the web app, so all three
+    agree on what ran."""
+    if settings.llm_provider == "vertex_gemini" and settings.llm_model.startswith("claude"):
+        from providers.llm.vertex import DEFAULT_GEMINI_MODEL
+
+        return DEFAULT_GEMINI_MODEL
+    if settings.llm_provider == "extractive":
+        return "extractive-v1"
+    return settings.llm_model
+
+
 def offline_fallback(settings: Settings) -> Settings:
     """Claude when a key is set; otherwise the offline extractive agent.
 
@@ -44,6 +58,14 @@ def build_llm(settings: Settings, **kwargs: Any) -> LLMProvider:
             from providers.llm.extractive import ExtractiveProvider
 
             return ExtractiveProvider()
+        case "vertex_gemini":
+            from providers.llm.vertex import VertexGeminiProvider
+
+            return VertexGeminiProvider(settings)
+        case "vertex_claude":
+            from providers.llm.vertex import claude_on_vertex
+
+            return claude_on_vertex(settings)
         case other:  # pragma: no cover - guarded by the Literal type
             raise ValueError(f"unknown LLM provider: {other}")
 
@@ -99,9 +121,11 @@ def config_snapshot(settings: Settings, *, corpus_hash: str = "") -> dict[str, A
         "git_sha": git_sha(),
         "llm": {
             "provider": settings.llm_provider,
-            "model": settings.llm_model,
+            "model": effective_model(settings),
             "temperature": settings.llm_temperature,
             "max_tokens": settings.llm_max_tokens,
+            **({"vertex_location": settings.vertex_location}
+               if settings.llm_provider.startswith("vertex_") else {}),
         },
         "stt": {"provider": settings.stt_provider},
         "tts": {"provider": settings.tts_provider, "voice_id": settings.cartesia_voice_id},

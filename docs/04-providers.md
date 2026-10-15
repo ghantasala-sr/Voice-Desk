@@ -105,6 +105,67 @@ which runs one fixed scenario through both and asserts the same tool was called 
 same arguments. It does **not** assert identical prose — that would be testing the model,
 not the interface.
 
+### `vertex.py` — Google Cloud Vertex AI
+
+Two providers, both authenticated by gcloud Application Default Credentials
+(`gcloud auth application-default login`). There is no key in `.env`. Settings:
+`VD_GCP_PROJECT` (falls back to `GOOGLE_CLOUD_PROJECT`, then `gcloud config`) and
+`VD_VERTEX_LOCATION` (default `global`). Install with `pip install -e ".[vertex]"`.
+
+| provider | what | status in this repo |
+|---|---|---|
+| `vertex_gemini` | Gemini via `google-genai`, default `gemini-2.5-flash` | **working**, verified live on `garden-app-sg26` |
+| `vertex_claude` | Claude via `AsyncAnthropicVertex`, the Anthropic provider with another client | wired; the project has **zero Claude quota** on Vertex (every model returns 429 "Quota exceeded … submit a quota increase request") |
+
+**What the Gemini adapter absorbs:**
+
+- **System prompt.** One `system_instruction`, with the static half first.
+- **Tool calls.** They arrive complete, so there are no fragments to buffer.
+- **Tool results.** They go back as `function_response`, which needs the tool *name*. The
+  name is recovered from the matching `tool_use` in history.
+- **Thought signatures.** Thinking models sign function calls, and the signature must be
+  echoed on the next request. The provider keeps signatures by call id, because the
+  harness's history has no slot for them.
+- **Thinking.** Off by default on 2.5 Flash (`thinking_budget=0`), for first-token latency.
+  Set `VD_LLM_THINKING_BUDGET` to change it.
+- **Timeout.** `request.timeout_ms` is enforced via `HttpOptions(timeout=…)`. Without it, one
+  measured turn stalled for 35.8 s.
+- **Stops and failures.** `SAFETY` and `MALFORMED_FUNCTION_CALL` finish reasons, and quota
+  errors, become `StreamEnd(stop_reason="error")`, never an exception.
+
+**What changed in the harness because of Gemini.** All of these changes are
+model-independent.
+
+- **Citation groups.** Grouped tags like `[K2, K3]` are now stripped. Before, the caller
+  heard them read aloud.
+- **Tool use is spelled out.** A `TOOLS` section in the static prompt says to call
+  `lookup_order` rather than offer to. Claude inferred this; Gemini Flash did not.
+- **A confirmed tool is withheld from the follow-up call** that reports its outcome. Gemini
+  re-called it every time; the ledger suppressed the duplicate, but the caller heard
+  "already gone through".
+
+**Measured** (small n; scratch runs, not a results directory):
+
+- **4-turn flow** (verify → lookup → section → transfer → yes) with Flash, temperature 0.2,
+  thinking off:
+  - The final config succeeded in 5 of 6 runs.
+  - The one failure was a 10 s Vertex timeout, which the harness turned into its fixed
+    fallback line.
+  - Across all runs at this config, 17 of 21 succeeded.
+- **Alternatives tried:**
+  - Flash at temperature 0: 4/5.
+  - Flash with a 512-token thinking budget: 1/5. It wrote transfers as prose, then
+    retrieval-weak handoffs followed.
+  - 2.5 Pro: 0/5, with a 13 s median turn.
+- **Time to first token**, 40 requests per endpoint:
+
+  | endpoint | p50 | p95 | errors |
+  |---|---|---|---|
+  | `global` | 0.81 s | 7.3 s | 3 timeouts |
+  | `us-central1` | 1.99 s | 5.6 s | 0 |
+
+  The tails, not the medians, are what would break a voice budget.
+
 ### `replay.py`
 
 Deterministic provider that replays a recorded event sequence from a YAML fixture.

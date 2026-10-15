@@ -127,3 +127,16 @@ def test_word_numbers_can_be_marked() -> None:
     'which one did you mean' is never treated as a quantity."""
     assert canonicalize("which one", mark_word_numbers=True) == "which ~1"
     assert canonicalize("which 1", mark_word_numbers=True) == "which 1"
+
+
+@pytest.mark.parametrize("text, tags", [
+    ("Transfers are free [K1].", [1]),
+    ("They won't be downloadable yet [K2, K3].", [2, 3]),   # Gemini's form
+    ("Free [K2][K4] and fast [K3,K5].", [2, 4, 3, 5]),
+    ("Section [K 2; 3] is fine.", [2, 3]),
+])
+def test_grouped_citation_tags_are_never_spoken(text: str, tags: list[int]) -> None:
+    clean, cited = strip_citations(text)
+    assert "[" not in clean and "K" not in clean.replace("King", "")
+    assert cited == tags
+    assert "[" not in to_spoken(text)

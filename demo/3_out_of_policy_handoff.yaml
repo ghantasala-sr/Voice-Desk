@@ -3,8 +3,15 @@
 # model call, and the human receives a summary saying what was NOT promised.
 llm_fixture: demo/fixtures/3_handoff.yaml
 stack: {retrieval: real, tools: true, verified: true}
+#
+# The first line used to be "I can't make Saturday anymore and I want my money
+# back." Since the week-3 handoff calibration, that phrasing hands off on turn 1:
+# its best dense match is 0.577, under the 0.62 retrieval_very_weak threshold,
+# while "Can I get a refund?" against the same section scores 0.68. It is the
+# known everyday-refund false positive (results/2026-10-15-handoff-calibration/)
+# — kept as a finding, not hidden by loosening the threshold for a demo.
 turns:
-  - user: "I can't make Saturday anymore and I want my money back."
+  - user: "I changed my mind about Saturday. Can I get my money back?"
   - user: "That's ridiculous. Let me talk to a manager."
 expect:
   stop_reasons: [answered, handoff]

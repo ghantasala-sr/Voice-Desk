@@ -35,10 +35,15 @@ from providers.llm.base import (
 class AnthropicProvider(LLMProvider):
     name = "anthropic"
 
-    def __init__(self, settings: Settings) -> None:
+    def __init__(self, settings: Settings, *, client: Any | None = None) -> None:
+        self.model = settings.llm_model
+        if client is not None:
+            # Claude on Vertex AI: same Messages API, different client and auth
+            # (providers.llm.vertex.claude_on_vertex).
+            self._client = client
+            return
         from anthropic import AsyncAnthropic
 
-        self.model = settings.llm_model
         self._client = AsyncAnthropic(api_key=settings.require("anthropic_api_key"))
 
     async def aclose(self) -> None:

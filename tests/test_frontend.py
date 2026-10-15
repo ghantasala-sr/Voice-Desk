@@ -10,7 +10,7 @@ swap them (see app/chat.py).
 from __future__ import annotations
 
 import json
-from typing import Any
+from typing import Any, get_args
 
 import pytest
 from fastapi.testclient import TestClient
@@ -18,7 +18,7 @@ from fastapi.testclient import TestClient
 from app import chat
 from app.insights import RESULTS, headline_numbers, readme_outline
 from app.main import app
-from core.settings import Settings
+from core.settings import LLMProviderName, Settings
 from harness.assembly import build_stack
 
 REFUND_CHUNK = (
@@ -92,7 +92,7 @@ def test_status_shape(client: TestClient) -> None:
     assert set(body["keys"]) >= {"anthropic", "deepgram", "cartesia"}
     assert all(isinstance(v, bool) for v in body["keys"].values())
     assert isinstance(body["voice"]["ready"], bool)
-    assert body["agent"]["provider"] in ("anthropic", "openai", "extractive", "replay")
+    assert body["agent"]["provider"] in get_args(LLMProviderName)
 
 
 def test_status_never_contains_key_material(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -19,6 +19,11 @@ import structlog
 def configure_logging(*, level: str = "INFO", json_output: bool = False) -> None:
     """Call once at process start."""
     logging.basicConfig(format="%(message)s", stream=sys.stdout, level=level.upper())
+    # google-genai routes requests through httpx, which logs every request —
+    # including HuggingFace's model-cache probes — at INFO. That is noise in a
+    # transcript, not signal.
+    for noisy in ("httpx", "httpcore", "huggingface_hub", "google_genai"):
+        logging.getLogger(noisy).setLevel(logging.WARNING)
 
     processors: list[Any] = [
         structlog.contextvars.merge_contextvars,
