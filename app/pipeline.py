@@ -47,8 +47,15 @@ from providers import build_llm, config_snapshot, offline_fallback
 
 log = get_logger(__name__)
 
-# The browser sends 16 kHz mono PCM16 in 20 ms frames (640 bytes).
+# The browser sends 16 kHz mono PCM16 in 20 ms frames (640 bytes), and its
+# AudioContext plays back at the same rate (app/static/client.js).
 INPUT_SAMPLE_RATE = 16_000
+OUTPUT_SAMPLE_RATE = 16_000
+#: Hang-up waits for this much transport silence — longer than the gap
+#: between two queued segments, shorter than anyone would notice.
+QUIET_MS = 700
+#: The browser's playback worklet holds a little audio of its own.
+CLIENT_BUFFER_S = 0.4
 
 
 async def run_call(websocket: Any, *, settings: Settings) -> None:
@@ -94,6 +101,8 @@ async def run_call(websocket: Any, *, settings: Settings) -> None:
         async for command in harness.run(call, stream):
             await session.handle(command)
     finally:
+        if session.tts is not None:
+            session.tts.close()
         pipeline_task.cancel()
         await writer.flush()
         await store.finish_call(call, duration_ms=session.elapsed_ms())
@@ -115,7 +124,11 @@ class _Session:
         self.clock = SystemClock()
         self._started_ms = self.clock.now_ms()
 
-        self.playout = PlayoutTracker()
+        self.playout = PlayoutTracker(sample_rate=OUTPUT_SAMPLE_RATE)
+        self._queued_segments: list[int] = []
+        self._playout_end_ms = 0
+        self._bot_speaking = False
+        self._bot_changed_ms = 0
         self.timings = TurnTimings()
         self.current_turn_id: str | None = None
         self.tts: Any = None  # set by _run_audio
@@ -128,7 +141,9 @@ class _Session:
             if command.context_id != self.current_turn_id:
                 self.current_turn_id = command.context_id
                 self.playout.reset()
+                self._queued_segments.clear()
             self.playout.segment_started(command.segment_id, command.text)
+            self._queued_segments.append(command.segment_id)
             await self.websocket.send_text(
                 transcript_message("agent", command.text, segment_id=command.segment_id)
             )
@@ -141,6 +156,7 @@ class _Session:
             # cleanup can take another few milliseconds unnoticed.
             if self.tts is not None:
                 await self.tts.cancel(command.context_id)
+            self._queued_segments.clear()
             await self.websocket.send_text(ws_message("cancel_speech"))
 
         elif isinstance(command, Emit):
@@ -173,6 +189,7 @@ class _Session:
             self.timings = TurnTimings()
 
         elif isinstance(command, EndCall):
+            await self.drain_speech()
             await self.websocket.send_text(
                 ws_message("call_ended", outcome=self.call.outcome or command.reason)
             )
@@ -199,12 +216,43 @@ class _Session:
         )
 
     def on_audio_out(self, num_bytes: int) -> None:
+        # The browser plays in real time from the first byte, so the end of
+        # playout advances by each chunk's duration.
+        now = self.clock.now_ms()
+        self._playout_end_ms = max(self._playout_end_ms, now) + num_bytes * 1000 // (OUTPUT_SAMPLE_RATE * 2)
         self.playout.audio_delivered(num_bytes)
         if self.timings.first_audio_ms is None:
             self.timings.first_audio_ms = self.clock.now_ms()
 
     def on_segment_drained(self, segment_id: int) -> None:
         self.playout.segment_completed(segment_id)
+
+    def on_tts_segment_done(self) -> None:
+        if self._queued_segments:
+            self.on_segment_drained(self._queued_segments.pop(0))
+        if self.tts is not None:
+            self.tts.segment_done()
+
+    def on_bot_speaking(self, speaking: bool) -> None:
+        self._bot_speaking = speaking
+        self._bot_changed_ms = self.clock.now_ms()
+
+    async def drain_speech(self, limit_s: float = 20.0) -> None:
+        """Before hanging up: let queued speech generate, then let it finish
+        PLAYING — the transport has been quiet for QUIET_MS, plus the client's
+        own playback buffer. Cancelling at once cut the handoff line, so the
+        caller never heard that they were being passed to a person."""
+        if self.tts is None:
+            return
+        deadline = self.clock.now_ms() + int(limit_s * 1000)
+        await self.tts.wait_idle(limit_s)
+        while self.clock.now_ms() < deadline:
+            quiet_for = self.clock.now_ms() - self._bot_changed_ms
+            if not self._bot_speaking and quiet_for >= QUIET_MS:
+                break
+            await asyncio.sleep(0.05)
+        remaining = (self._playout_end_ms - self.clock.now_ms()) / 1000
+        await asyncio.sleep(max(0.0, min(remaining, 2.0)) + CLIENT_BUFFER_S)
 
     def on_closed(self) -> None:
         self.stream.put(Shutdown("transport_closed"))
@@ -222,6 +270,10 @@ async def _run_audio(session: _Session, settings: Settings) -> None:
     """Build and run the Pipecat pipeline, feeding `session` as events arrive.
 
     Kept to one function so a Pipecat version bump touches nothing else.
+    Written for Pipecat 1.x: the FastAPI transport lives in
+    `transports.websocket.fastapi`, VAD is its own processor rather than a
+    transport parameter, and the transport needs a serializer for the wire
+    format — ours is raw 16 kHz PCM16 in binary frames plus JSON control text.
     """
     try:
         from pipecat.audio.vad.silero import SileroVADAnalyzer
@@ -229,9 +281,10 @@ async def _run_audio(session: _Session, settings: Settings) -> None:
         from pipecat.pipeline.pipeline import Pipeline
         from pipecat.pipeline.runner import PipelineRunner
         from pipecat.pipeline.task import PipelineParams, PipelineTask
+        from pipecat.processors.audio.vad_processor import VADProcessor
         from pipecat.services.cartesia.tts import CartesiaTTSService
-        from pipecat.services.deepgram.stt import DeepgramSTTService
-        from pipecat.transports.network.fastapi_websocket import (
+        from pipecat.services.deepgram.stt import DeepgramSTTService, LiveOptions
+        from pipecat.transports.websocket.fastapi import (
             FastAPIWebsocketParams,
             FastAPIWebsocketTransport,
         )
@@ -241,59 +294,178 @@ async def _run_audio(session: _Session, settings: Settings) -> None:
             ws_message(
                 "error",
                 message="Audio dependencies are not installed. "
-                "Run: pip install -e '.[audio]'  — or use `make chat` for text mode.",
+                "Run: pip install 'pipecat-ai[deepgram,cartesia,silero,websocket]' — "
+                "or use the Talk tab / `make chat` for text mode.",
             )
         )
         session.on_closed()
         return
 
-    vad = SileroVADAnalyzer(
+    vad = VADProcessor(vad_analyzer=SileroVADAnalyzer(
+        sample_rate=INPUT_SAMPLE_RATE,
         params=VADParams(
             confidence=settings.vad_confidence,
             start_secs=settings.vad_start_secs,
             stop_secs=settings.vad_stop_secs,
-        )
-    )
+        ),
+    ))
     transport = FastAPIWebsocketTransport(
         websocket=session.websocket,
         params=FastAPIWebsocketParams(
             audio_in_enabled=True,
             audio_out_enabled=True,
             audio_in_sample_rate=INPUT_SAMPLE_RATE,
-            vad_analyzer=vad,
+            audio_out_sample_rate=OUTPUT_SAMPLE_RATE,
+            add_wav_header=False,
+            serializer=_raw_pcm_serializer(session),
         ),
     )
     stt = DeepgramSTTService(
         api_key=settings.require("deepgram_api_key"),
-        live_options={"model": "nova-3", "smart_format": True, "numerals": True},
+        sample_rate=INPUT_SAMPLE_RATE,
+        live_options=LiveOptions(model="nova-3", smart_format=True, numerals=True,
+                                 interim_results=True, language="en-US"),
     )
     tts = CartesiaTTSService(
         api_key=settings.require("cartesia_api_key"),
-        voice_id=settings.cartesia_voice_id,
+        voice_id=settings.require("cartesia_voice_id"),
+        sample_rate=OUTPUT_SAMPLE_RATE,
     )
-    session.tts = _TTSAdapter(tts)
 
     adapter = _HarnessFrameProcessor(session)
+    session.tts = _TTSAdapter(adapter)
     task = PipelineTask(
-        Pipeline([transport.input(), stt, adapter, tts, transport.output()]),
-        params=PipelineParams(allow_interruptions=True, enable_metrics=True),
+        Pipeline([transport.input(), vad, stt, adapter, tts,
+                  _PlayoutObserver(session), transport.output()]),
+        params=PipelineParams(audio_in_sample_rate=INPUT_SAMPLE_RATE,
+                              audio_out_sample_rate=OUTPUT_SAMPLE_RATE, enable_metrics=True),
     )
-    await PipelineRunner().run(task)
+
+    @transport.event_handler("on_client_disconnected")
+    async def _gone(_transport: Any, _client: Any) -> None:
+        session.on_closed()
+        await task.cancel()
+
+    await PipelineRunner(handle_sigint=False).run(task)
 
 
 class _TTSAdapter:
-    """Thin wrapper so `_Session` does not need Pipecat's frame vocabulary."""
+    """Thin wrapper so `_Session` does not need Pipecat's frame vocabulary.
 
-    def __init__(self, service: Any) -> None:
-        self._service = service
+    Speech and cancellation are pushed as frames from the harness adapter, so
+    they travel the pipeline in order: a cancel reaches the TTS service AND the
+    output transport, which is what actually stops sound leaving the speaker.
+
+    Segments go to TTS ONE AT A TIME. Each TTSSpeakFrame is its own Cartesia
+    request, the harness can release four segments within milliseconds, and the
+    account's concurrency limit is 2 — the extra segments failed and were
+    silent. The next segment is released when the previous one has finished
+    generating (TTSStoppedFrame, seen by _PlayoutObserver), or after a timeout
+    so a lost frame can never wedge the call.
+    """
+
+    SEGMENT_TIMEOUT_S = 8.0
+
+    def __init__(self, processor: Any) -> None:
+        self._processor = processor
+        self._queue: asyncio.Queue[str] = asyncio.Queue()
+        self._done = asyncio.Event()
+        self._idle = asyncio.Event()
+        self._idle.set()
+        self._worker = asyncio.create_task(self._run())
+
+    async def _run(self) -> None:
+        from pipecat.frames.frames import TTSSpeakFrame
+        from pipecat.processors.frame_processor import FrameDirection
+
+        while True:
+            text = await self._queue.get()
+            self._done.clear()
+            await self._processor.push_frame(TTSSpeakFrame(text), FrameDirection.DOWNSTREAM)
+            try:
+                await asyncio.wait_for(self._done.wait(), self.SEGMENT_TIMEOUT_S)
+            except TimeoutError:
+                log.warning("tts_segment_timeout", text=text[:60])
+            if self._queue.empty():
+                self._idle.set()
 
     async def speak(self, text: str, *, context_id: str) -> None:
-        from pipecat.frames.frames import TTSSpeakFrame
+        self._idle.clear()
+        await self._queue.put(text)
 
-        await self._service.queue_frame(TTSSpeakFrame(text))
+    def segment_done(self) -> None:
+        self._done.set()
+
+    async def wait_idle(self, limit_s: float) -> None:
+        try:
+            await asyncio.wait_for(self._idle.wait(), limit_s)
+        except TimeoutError:
+            pass
 
     async def cancel(self, context_id: str) -> None:
-        await self._service.interrupt()
+        while not self._queue.empty():
+            self._queue.get_nowait()
+        self._done.set()
+        self._idle.set()
+        await self._processor.broadcast_interruption()
+
+    def close(self) -> None:
+        self._worker.cancel()
+
+
+def _raw_pcm_serializer(session: _Session) -> Any:
+    """The browser's wire format: binary PCM16 frames; text frames are JSON
+    control messages that belong to the app, not to Pipecat."""
+    from pipecat.frames.frames import InputAudioRawFrame, OutputAudioRawFrame
+    from pipecat.serializers.base_serializer import FrameSerializer
+
+    class _RawPCM(FrameSerializer):
+        async def serialize(self, frame: Any) -> bytes | None:
+            if isinstance(frame, OutputAudioRawFrame):
+                session.on_audio_out(len(frame.audio))
+                return bytes(frame.audio)
+            return None
+
+        async def deserialize(self, data: str | bytes) -> Any:
+            if isinstance(data, (bytes, bytearray)):
+                return InputAudioRawFrame(audio=bytes(data), sample_rate=INPUT_SAMPLE_RATE,
+                                          num_channels=1)
+            return None  # {"type": "start"} and other control text
+
+    return _RawPCM()
+
+
+def _PlayoutObserver(session: _Session) -> Any:
+    """Sits after TTS, just before the output transport.
+
+    Downstream, a TTSStoppedFrame means one segment's audio is fully produced;
+    segments are spoken in order, so they drain FIFO. Upstream, the transport
+    reports Bot{Started,Stopped}SpeakingFrame — the only reliable sign that
+    audio has finished PLAYING, because the transport paces audio in real
+    time and most of a long line is still unsent when generation ends."""
+    from pipecat.frames.frames import (
+        BotStartedSpeakingFrame,
+        BotStoppedSpeakingFrame,
+        ErrorFrame,
+        TTSStoppedFrame,
+    )
+    from pipecat.processors.frame_processor import FrameProcessor
+
+    class _Observer(FrameProcessor):
+        async def process_frame(self, frame: Any, direction: Any) -> None:
+            await super().process_frame(frame, direction)
+            if isinstance(frame, TTSStoppedFrame):
+                session.on_tts_segment_done()
+            elif isinstance(frame, BotStartedSpeakingFrame):
+                session.on_bot_speaking(True)
+            elif isinstance(frame, BotStoppedSpeakingFrame):
+                session.on_bot_speaking(False)
+            elif isinstance(frame, ErrorFrame):
+                log.warning("tts_error", detail=str(getattr(frame, "error", frame))[:200])
+                session.on_tts_segment_done()  # never wait on a segment that failed
+            await self.push_frame(frame, direction)
+
+    return _Observer()
 
 
 def _HarnessFrameProcessor(session: _Session) -> Any:
@@ -307,6 +479,8 @@ def _HarnessFrameProcessor(session: _Session) -> Any:
         TranscriptionFrame,
         UserStartedSpeakingFrame,
         UserStoppedSpeakingFrame,
+        VADUserStartedSpeakingFrame,
+        VADUserStoppedSpeakingFrame,
     )
     from pipecat.processors.frame_processor import FrameDirection, FrameProcessor
 
@@ -314,9 +488,9 @@ def _HarnessFrameProcessor(session: _Session) -> Any:
         async def process_frame(self, frame: Frame, direction: FrameDirection) -> None:
             await super().process_frame(frame, direction)
 
-            if isinstance(frame, UserStartedSpeakingFrame):
+            if isinstance(frame, (VADUserStartedSpeakingFrame, UserStartedSpeakingFrame)):
                 session.on_user_started_speaking()
-            elif isinstance(frame, UserStoppedSpeakingFrame):
+            elif isinstance(frame, (VADUserStoppedSpeakingFrame, UserStoppedSpeakingFrame)):
                 session.on_user_stopped_speaking()
             elif isinstance(frame, TranscriptionFrame):
                 session.on_final_transcript(

@@ -48,6 +48,48 @@ in the harness.
 
 ---
 
+### First live run: Pipecat 1.12 (2026-10-15)
+
+The wiring above was written in week 1, before any audio key existed. It first
+ran on 2026-10-15, against Deepgram nova-3, Cartesia and Gemini 2.5 Flash on
+Vertex. Install with `pip install "pipecat-ai[deepgram,cartesia,silero,websocket]"`.
+The editable `.[audio]` install fails to build here.
+
+**What changed for Pipecat 1.x** (all in `app/pipeline.py`):
+
+- **Transport module.** The FastAPI transport moved to `pipecat.transports.websocket.fastapi`.
+- **VAD.** VAD is its own `VADProcessor` stage, not a transport parameter. It emits
+  `VADUser{Started,Stopped}SpeakingFrame`, which now trigger barge-in.
+- **Serializer.** The transport requires one. `_raw_pcm_serializer` maps binary frames to
+  16 kHz PCM16 in both directions and ignores the JSON control text, which belongs to the
+  app. It also feeds playout accounting.
+- **Speech and barge-in are frames.** Speech is a `TTSSpeakFrame` pushed from the harness
+  adapter. Barge-in is `broadcast_interruption()`, so the output transport's buffer is
+  flushed, not just the TTS service.
+
+**What the live run exposed:**
+
+- **Cartesia's plan allows 2 concurrent requests.** Each segment is its own request, and
+  the harness can release four in a millisecond. The extras failed and were silent.
+  Segments now go to TTS one at a time, each released by the previous `TTSStoppedFrame`
+  (or an 8 s timeout).
+- **Hang-up cut off the handoff line.** The output transport paces audio in real time, so
+  most of a line is unsent when generation ends. `drain_speech()` now waits until the
+  transport's `BotStoppedSpeakingFrame` has been quiet for 700 ms before closing.
+  - Verified by transcribing the returned audio with Whisper: the full handoff line is
+    present.
+- **`PlayoutTracker` assumed 24 kHz.** The browser plays 16 kHz.
+
+**First numbers** (2 calls with recorded utterances, not a results directory):
+
+- Voice-to-voice **3.1 s** on a warm-ish call. The first audio, the acknowledgment line,
+  arrived **0.35–0.9 s** after endpointing.
+- Cartesia TTFB **0.07–0.10 s**.
+- Gemini first token **1.6–2.4 s** inside the harness. That is the stage that blows the
+  budget.
+- Cold start, from the first call after a restart: **~7 s** before `call_started`, loading
+  the embedding model.
+
 ## 2. Turn-taking — the most important tuning in the project
 
 Endpointing is the single largest term in voice-to-voice latency and the dominant driver of

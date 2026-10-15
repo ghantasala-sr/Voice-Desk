@@ -36,7 +36,7 @@ import yaml
 from core import db
 from core.settings import get_settings
 from eval.caller_sim.simulate import run as simulate
-from providers import offline_fallback
+from providers import effective_model, offline_fallback
 from retrieval.ingest import ingest
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -141,8 +141,13 @@ def main() -> int:
     target_intents = {i["id"] for i in intents_spec if chosen["target"] in i.get("gold_docs", [])}
     metric_keys = ("containment", "handoff_rate", "wrong_answer_rate", "resolved_rate")
     result = {
-        "run": f"{date.today().isoformat()}-feedback-cycle",
+        # One directory per agent: a Gemini cycle must never overwrite the
+        # offline-agent result that other documents cite.
+        "run": f"{date.today().isoformat()}-feedback-cycle"
+               + ("" if settings.llm_provider == "extractive"
+                  else f"-{settings.llm_provider.replace('_', '-')}"),
         "agent": settings.llm_provider,
+        "model": effective_model(settings),
         "change": {"type": "ingest_held_out_document", "target": chosen["target"],
                    "source": f"gap report {report['report_id']} action #{chosen['rank']}",
                    "skipped_higher_ranked": [{"rank": a["rank"], "diagnosis": a["diagnosis"],

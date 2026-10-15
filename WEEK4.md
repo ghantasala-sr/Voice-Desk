@@ -168,5 +168,17 @@ every Claude model returns 429. Details are in [docs/04](docs/04-providers.md).
 - Time to first token on the `global` endpoint: **p50 0.81 s, p95 7.3 s**. The tail is what
   would break the voice budget.
 
-**Not re-run with Gemini:** the week-4 numbers above still describe the offline agent.
-`make cycle` would re-measure them with Gemini, at roughly 3,000 requests.
+**Re-run with Gemini:** `results/2026-10-15-feedback-cycle-vertex-gemini/`.
+- The gap report found the **same three gaps at the same ranks**.
+- The change moved its target intent **+16 / −0** (p = 3 × 10⁻⁵).
+- Every other intent drifted both ways (+14 / −22, p = 0.24), which is a sampled model's
+  noise.
+- Gemini cites in only 29% of turns, so its wrong-answer rate is an upper bound and is not
+  comparable with the offline agent's.
+
+**Live voice:** Deepgram + Cartesia keys added. The week-1 Pipecat wiring was ported to
+Pipecat 1.12 and ran for the first time. Two bugs were fixed:
+- Cartesia's 2-request concurrency limit silenced segments.
+- Hang-up cut off the handoff line.
+
+Details are in [docs/10](docs/10-audio-pipeline.md).

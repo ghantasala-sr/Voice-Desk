@@ -224,7 +224,9 @@ async def get_result_file(name: str, file: str) -> Any:
 @router.get("/api/feedback-cycle/latest")
 async def latest_feedback_cycle() -> Any:
     runs = _runs()
-    cycles = sorted((n for n in runs if n.endswith("-feedback-cycle")
+    # `<date>-feedback-cycle` (offline agent) or `<date>-feedback-cycle-<agent>`;
+    # superseded runs are kept on disk but never shown as the latest.
+    cycles = sorted((n for n in runs if "-feedback-cycle" in n and "superseded" not in n
                      and (runs[n] / "metrics.json").is_file()), reverse=True)
     for name in cycles:
         metrics = _read_json(runs[name] / "metrics.json")

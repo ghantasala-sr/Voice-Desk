@@ -83,7 +83,8 @@ whenever you quote one.
 | Feedback cycle: containment *(300 simulated calls, offline agent)* | **0.737 → 0.793**; paired **+17 / −0**, McNemar p = 1.5 × 10⁻⁵ | `results/2026-10-15-feedback-cycle/` |
 | Feedback cycle: wrong-answer rate (guardrail) | **0.136 → 0.113** — did not rise | same |
 | Gap report vs hidden labels | **3/3** planted gaps found (ranks 2, 4, 5); 1/3 in the top 3; cluster purity 0.985 | `results/2026-10-15-gap-report-cycle-before/` |
-| Test suite | **378** tests, ~25 s | `make test` |
+| Feedback cycle with **Gemini 2.5 Flash** (live model) | target intent paired **+16 / −0** (p = 3 × 10⁻⁵); weather helped 0/20 → 14/20; gap report found the same 3 gaps at the same ranks | `results/2026-10-15-feedback-cycle-vertex-gemini/` |
+| Test suite | **381** tests, ~25 s | `make test` |
 
 ### Findings worth talking about in interviews
 
@@ -151,6 +152,12 @@ whenever you quote one.
   noise levels and 8 kHz phone audio: WER stayed under 6% while key-entity
   accuracy fell from **83% to 62%** at 5 dB — spoken emails worst at **43%** —
   showing WER alone hides the failures that break a support call.
+
+- Ran the same feedback cycle with a live LLM (Gemini 2.5 Flash on Vertex AI):
+  the gap report named the same three gaps at the same ranks, and the fix moved
+  its target intent +16/−0 (p < 0.001) while the guardrails held — showing the
+  loop is model-independent, and quantifying the live model's own failure
+  modes (29% citation rate, 3.3% of calls lost to provider timeouts).
 
 **Fill in with API keys (leave the blanks until measured):**
 

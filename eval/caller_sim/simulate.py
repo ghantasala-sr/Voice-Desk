@@ -45,6 +45,7 @@ from core.ids import new_id
 from core.settings import Settings, get_settings
 from eval.metrics import Proportion
 from eval.text_driver import TextDriver
+from harness.normalize import to_spoken
 from harness.retriever import PostgresRetriever
 from harness.tools.execution import PostgresLedger, ToolExecutor
 from harness.tools.mocks.faults import PROFILES, FaultyBackend
@@ -58,8 +59,25 @@ ROOT = HERE.parent.parent
 MAX_TURNS = 6
 
 READBACK = "Should I go ahead"
-ASKS_DETAILS = ("order number", "email address on the order", "read it to me again")
-EMAIL_MISMATCH = "doesn't match the order"
+# Model-agnostic: the offline agent's fixed lines, and how a real LLM words the
+# same request ("Could you confirm the email associated with the order?").
+ASKS_DETAILS = ("order number", "email address", "read it to me again", "verify your",
+                "confirm the email", "email associated", "email on the order")
+EMAIL_MISMATCH = ("doesn't match the order", "does not match", "doesn't match")
+FIXED_LINES = ("I'm having trouble on my end", "Let me double-check that detail",
+               "I want to be sure I get that right")
+
+
+def asks_recipient(reply: str) -> bool:
+    """The agent wants the transfer's TARGET, not the caller's own details."""
+    low = reply.lower()
+    return any(w in low for w in ("friend's email", "recipient", "send them to", "who should",
+                                  "their email", "friend's e-mail", "email address of"))
+
+
+def asks_details(reply: str) -> bool:
+    low = reply.lower()
+    return any(s.lower() in low for s in ASKS_DETAILS + EMAIL_MISMATCH)
 SIGNOFF = "Thanks, that's everything."
 
 
@@ -122,14 +140,43 @@ class Caller:
         return choice
 
 
+def order_facts(backend: MockTicketing, order_id: str) -> list[str]:
+    """True facts about the caller's order, in the forms an agent might say them."""
+    order = backend.orders.get(order_id) or {}
+    event = backend.events.get(order.get("event_id", ""), {})
+    facts = [event.get("name", "").removeprefix("the ").lower(), event.get("venue", "").lower()]
+    status = event.get("status")
+    facts += {"cancelled": ["cancelled", "canceled"], "postponed": ["postponed"]}.get(status, [])
+    section = str(order.get("section", ""))
+    if section.isdigit():
+        facts += [to_spoken(section).lower(), " ".join(_spell(section)), section]
+    elif section:
+        facts.append(section.lower())
+    return [f for f in facts if f]
+
+
+def _spell(digits: str) -> list[str]:
+    return [to_spoken(d).lower() for d in digits]
+
+
 def helped(intent: dict[str, Any], cited_docs: set[str], backend: MockTicketing,
-           reply: str) -> bool:
-    """The HIDDEN judgment: did this turn actually solve the caller's problem?"""
+           reply: str, turn: Any = None, verified: bool = False) -> bool:
+    """The HIDDEN judgment: did this turn actually solve the caller's problem?
+
+    Judged by what is TRUE, not by wording, so it holds for any agent. A lookup
+    is helped when the caller is verified and the reply states a real fact from
+    their order record (event, venue, status, section). The first version
+    matched the offline agent's templates ("You have …"); the second required a
+    lookup_order call, and scored Gemini wrong for answering from the
+    verify_caller result it already had."""
     kind = intent.get("transactional")
     if kind == "transfer":
         return backend.count_effects("transfer_tickets") > 0
     if kind == "lookup":
-        return any(s in reply for s in ("You have", "has been cancelled", "has been postponed"))
+        if not verified or asks_details(reply) or any(f in reply for f in FIXED_LINES):
+            return False
+        low = reply.lower().replace("-", " ")
+        return any(f.replace("-", " ") in low for f in order_facts(backend, intent["order"]["order_id"]))
     return bool(cited_docs & set(intent.get("gold_docs", [])))
 
 
@@ -171,7 +218,8 @@ async def simulate_call(index: int, *, run_id: str, seed: int, personas: list[di
             cited = {chunk_docs.get(c, "") for c in (turn.cited_chunk_ids if turn else [])}
 
             # A caller whose problem is solved has no reason to cut in.
-            if READBACK not in reply and helped(intent, cited, backend, reply):
+            if READBACK not in reply and helped(intent, cited, backend, reply, turn,
+                                                    driver.call.caller_verified):
                 satisfied = True
                 break
 
@@ -187,7 +235,12 @@ async def simulate_call(index: int, *, run_id: str, seed: int, personas: list[di
             if READBACK in reply:
                 utterance = "Yes, go ahead."
                 continue
-            if any(s in reply for s in ASKS_DETAILS) or EMAIL_MISMATCH in reply:
+            if intent.get("recipient") and asks_recipient(reply):
+                # Answer what was asked; re-reading the caller's own details
+                # here looped one smoke-test call to the turn cap.
+                utterance = f"Send {intent.get('quantity', 2)} tickets to {intent['recipient']}."
+                continue
+            if asks_details(reply):
                 utterance = caller.details() if intent.get("order") else caller.rephrase()
                 continue
             caller.unhelpful += 1

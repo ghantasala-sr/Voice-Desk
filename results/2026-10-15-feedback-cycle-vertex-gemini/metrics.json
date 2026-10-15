@@ -1,0 +1,434 @@
+{
+  "run": "2026-10-15-feedback-cycle-vertex-gemini",
+  "agent": "vertex_gemini",
+  "model": "gemini-2.5-flash",
+  "change": {
+    "type": "ingest_held_out_document",
+    "target": "11-weather-and-outdoor-events.md",
+    "source": "gap report 01M509TQYA712Z3ZNKK4SH6BYK action #2",
+    "skipped_higher_ranked": [
+      {
+        "rank": 1,
+        "diagnosis": "weak_coverage",
+        "target": "04-delivery-mobile-and-willcall.md"
+      }
+    ]
+  },
+  "corpus_hash_before": "98138b54d0e0e5a5",
+  "corpus_hash_after": "0cf91e60e8d8741e",
+  "seeds": {
+    "seed": 20261015,
+    "identical": true
+  },
+  "n_calls": 300,
+  "before": {
+    "containment": {
+      "value": 0.6781,
+      "n": 292,
+      "successes": 198,
+      "ci95": [
+        0.6225,
+        0.7291
+      ]
+    },
+    "handoff_rate": {
+      "value": 0.3116,
+      "n": 292,
+      "successes": 91,
+      "ci95": [
+        0.2613,
+        0.3669
+      ]
+    },
+    "wrong_answer_rate": {
+      "value": 0.2323,
+      "n": 198,
+      "successes": 46,
+      "ci95": [
+        0.1789,
+        0.2959
+      ]
+    },
+    "resolved_rate": {
+      "value": 0.5205,
+      "n": 292,
+      "successes": 152,
+      "ci95": [
+        0.4634,
+        0.5772
+      ]
+    }
+  },
+  "after": {
+    "containment": {
+      "value": 0.7153,
+      "n": 288,
+      "successes": 206,
+      "ci95": [
+        0.6606,
+        0.7643
+      ]
+    },
+    "handoff_rate": {
+      "value": 0.2639,
+      "n": 288,
+      "successes": 76,
+      "ci95": [
+        0.2163,
+        0.3177
+      ]
+    },
+    "wrong_answer_rate": {
+      "value": 0.2136,
+      "n": 206,
+      "successes": 44,
+      "ci95": [
+        0.1631,
+        0.2745
+      ]
+    },
+    "resolved_rate": {
+      "value": 0.5625,
+      "n": 288,
+      "successes": 162,
+      "ci95": [
+        0.5048,
+        0.6186
+      ]
+    }
+  },
+  "delta": {
+    "containment": 0.0372,
+    "handoff_rate": -0.0477,
+    "wrong_answer_rate": -0.0187,
+    "resolved_rate": 0.042
+  },
+  "duplicate_side_effects": {
+    "before": 0,
+    "after": 0
+  },
+  "paired": {
+    "contained": {
+      "gained": 30,
+      "lost": 22,
+      "mcnemar_exact_p": 0.332
+    },
+    "helped": {
+      "gained": 35,
+      "lost": 25,
+      "mcnemar_exact_p": 0.245
+    },
+    "changed_outside_target_intents": 58,
+    "target_intents": [
+      "weather_outdoor"
+    ]
+  },
+  "by_intent": {
+    "accessibility": {
+      "before": {
+        "contained": 10,
+        "helped": 1,
+        "n": 12
+      },
+      "after": {
+        "contained": 10,
+        "helped": 3,
+        "n": 12
+      }
+    },
+    "age_restriction_id": {
+      "before": {
+        "contained": 0,
+        "helped": 0,
+        "n": 10
+      },
+      "after": {
+        "contained": 0,
+        "helped": 0,
+        "n": 10
+      }
+    },
+    "delivery_problem": {
+      "before": {
+        "contained": 19,
+        "helped": 17,
+        "n": 23
+      },
+      "after": {
+        "contained": 17,
+        "helped": 15,
+        "n": 23
+      }
+    },
+    "event_status": {
+      "before": {
+        "contained": 19,
+        "helped": 17,
+        "n": 29
+      },
+      "after": {
+        "contained": 15,
+        "helped": 14,
+        "n": 29
+      }
+    },
+    "group_booking_vip": {
+      "before": {
+        "contained": 1,
+        "helped": 0,
+        "n": 19
+      },
+      "after": {
+        "contained": 0,
+        "helped": 0,
+        "n": 19
+      }
+    },
+    "payment_question": {
+      "before": {
+        "contained": 14,
+        "helped": 12,
+        "n": 15
+      },
+      "after": {
+        "contained": 12,
+        "helped": 10,
+        "n": 15
+      }
+    },
+    "refund_request": {
+      "before": {
+        "contained": 33,
+        "helped": 31,
+        "n": 44
+      },
+      "after": {
+        "contained": 34,
+        "helped": 34,
+        "n": 44
+      }
+    },
+    "resale_question": {
+      "before": {
+        "contained": 13,
+        "helped": 8,
+        "n": 16
+      },
+      "after": {
+        "contained": 13,
+        "helped": 10,
+        "n": 16
+      }
+    },
+    "ticket_transfer": {
+      "before": {
+        "contained": 33,
+        "helped": 28,
+        "n": 40
+      },
+      "after": {
+        "contained": 31,
+        "helped": 25,
+        "n": 40
+      }
+    },
+    "venue_logistics": {
+      "before": {
+        "contained": 16,
+        "helped": 11,
+        "n": 22
+      },
+      "after": {
+        "contained": 16,
+        "helped": 11,
+        "n": 22
+      }
+    },
+    "weather_outdoor": {
+      "before": {
+        "contained": 2,
+        "helped": 0,
+        "n": 20
+      },
+      "after": {
+        "contained": 18,
+        "helped": 14,
+        "n": 20
+      }
+    },
+    "where_are_my_tickets": {
+      "before": {
+        "contained": 38,
+        "helped": 27,
+        "n": 50
+      },
+      "after": {
+        "contained": 40,
+        "helped": 26,
+        "n": 50
+      }
+    }
+  },
+  "gap_report_accuracy": {
+    "planted_gaps": [
+      "age_restriction_id",
+      "group_booking_vip",
+      "weather_outdoor"
+    ],
+    "rank_of_each_planted_gap": {
+      "age_restriction_id": 5,
+      "group_booking_vip": 4,
+      "weather_outdoor": 2
+    },
+    "planted_gaps_in_top3": 1,
+    "false_positives_in_top3": [],
+    "mean_cluster_purity": 0.985,
+    "hidden_resolved_rate_by_intent": {
+      "accessibility": 0.083,
+      "age_restriction_id": 0.0,
+      "delivery_problem": 0.739,
+      "event_status": 0.586,
+      "group_booking_vip": 0.0,
+      "payment_question": 0.8,
+      "refund_request": 0.705,
+      "resale_question": 0.5,
+      "ticket_transfer": 0.7,
+      "venue_logistics": 0.5,
+      "weather_outdoor": 0.0,
+      "where_are_my_tickets": 0.54
+    },
+    "note": "scored with the simulator's hidden labels, AFTER the report was built"
+  },
+  "gap_report_actions": [
+    {
+      "rank": 1,
+      "diagnosis": "weak_coverage",
+      "target": "04-delivery-mobile-and-willcall.md",
+      "troubled_calls": 26
+    },
+    {
+      "rank": 2,
+      "diagnosis": "held_out_coverage",
+      "target": "11-weather-and-outdoor-events.md",
+      "troubled_calls": 19
+    },
+    {
+      "rank": 3,
+      "diagnosis": "weak_coverage",
+      "target": "02-ticket-transfers.md",
+      "troubled_calls": 16
+    },
+    {
+      "rank": 4,
+      "diagnosis": "held_out_coverage",
+      "target": "10-group-and-vip-packages.md",
+      "troubled_calls": 13
+    },
+    {
+      "rank": 5,
+      "diagnosis": "held_out_coverage",
+      "target": "12-age-restrictions-and-id.md",
+      "troubled_calls": 8
+    },
+    {
+      "rank": 6,
+      "diagnosis": "weak_coverage",
+      "target": "08-payment-and-billing.md",
+      "troubled_calls": 8
+    },
+    {
+      "rank": 7,
+      "diagnosis": "weak_coverage",
+      "target": "01-refunds-and-exchanges.md",
+      "troubled_calls": 8
+    },
+    {
+      "rank": 8,
+      "diagnosis": "weak_coverage",
+      "target": "05-venue-bag-policy.md",
+      "troubled_calls": 8
+    },
+    {
+      "rank": 9,
+      "diagnosis": "weak_coverage",
+      "target": "09-resale-and-face-value.md",
+      "troubled_calls": 5
+    },
+    {
+      "rank": 10,
+      "diagnosis": "weak_coverage",
+      "target": "03-event-cancellation-postponement.md",
+      "troubled_calls": 5
+    },
+    {
+      "rank": 11,
+      "diagnosis": "weak_coverage",
+      "target": "07-accessibility.md",
+      "troubled_calls": 4
+    },
+    {
+      "rank": 12,
+      "diagnosis": "weak_coverage",
+      "target": "06-venue-parking.md",
+      "troubled_calls": 4
+    },
+    {
+      "rank": 13,
+      "diagnosis": "threshold_too_strict",
+      "target": "retrieval threshold",
+      "troubled_calls": 2
+    },
+    {
+      "rank": 14,
+      "diagnosis": "tool_failure",
+      "target": "verification_failed",
+      "troubled_calls": 1
+    }
+  ],
+  "simulation_runs": {
+    "before": "cycle-before-01M508V3",
+    "after": "cycle-after-01M509TR"
+  },
+  "paired_by_scope": {
+    "target_intents": {
+      "contained": {
+        "gained": 16,
+        "lost": 0,
+        "mcnemar_exact_p": 3.05e-05
+      },
+      "helped": {
+        "gained": 14,
+        "lost": 0,
+        "mcnemar_exact_p": 0.000122
+      }
+    },
+    "other_intents": {
+      "contained": {
+        "gained": 14,
+        "lost": 22,
+        "mcnemar_exact_p": 0.243
+      },
+      "helped": {
+        "gained": 21,
+        "lost": 25,
+        "mcnemar_exact_p": 0.659
+      }
+    },
+    "note": "Gemini is not deterministic at temperature 0.2: identical seeds give identical CALLERS, not identical answers. Changes outside the target intent are run-to-run noise (no significant drift either way)."
+  },
+  "agent_quality": {
+    "answered_turns_with_retrieval": 711,
+    "turns_with_a_citation": 206,
+    "citation_rate": 0.29,
+    "calls_ended_by_provider_error": {
+      "before": 8,
+      "after": 12
+    },
+    "provider_errors": {
+      "read_timeout": 18,
+      "vertex_504": 2,
+      "quota_429": 0
+    },
+    "note": "helped for policy intents is judged by the cited document; Gemini cites in 29% of answered turns, so its helped/wrong-answer numbers are a LOWER/UPPER bound and are not comparable with the extractive agent's, which always cites."
+  }
+}

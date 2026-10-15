@@ -8,14 +8,14 @@ confident.
 The engine is domain-agnostic. The reference deployment is Tier-1 phone support
 for a fictional event-ticketing company, *Tide & Tempo Tickets*.
 
-> **Status:** all four weeks built, plus a web app. 378 tests; every reported
+> **Status:** all four weeks built, plus a web app. 381 tests; every reported
 > number is backed by a run directory in [`results/`](results/). What is and is
 > not verified is spelled out in [WEEK1.md](WEEK1.md), [WEEK2.md](WEEK2.md),
 > [WEEK3.md](WEEK3.md), [WEEK4.md](WEEK4.md). No API key was available while
 > building, so measured agent behaviour is from an **offline extractive agent**,
 > labelled as such everywhere. The live agent now runs on **Gemini 2.5 Flash on
-> Google Cloud Vertex AI** via gcloud credentials ([docs/04](docs/04-providers.md));
-> the week-4 results have not yet been re-run with it.
+> Google Cloud Vertex AI** via gcloud credentials ([docs/04](docs/04-providers.md)),
+> with live voice on Deepgram + Cartesia; the feedback cycle has been re-run with it.
 
 ---
 
@@ -526,11 +526,15 @@ says so. `make report` renders all of this, with provenance, into
 | STT key-entity accuracy, clean → 5 dB | **0.83 → 0.62** (WER only 0.025 → 0.052); spoken emails **0.67 → 0.43** |
 | Feedback cycle, containment *(300 simulated calls, offline agent)* | **0.737 → 0.793**, paired +17 / −0, McNemar p = 1.5 × 10⁻⁵ |
 | Feedback cycle, wrong-answer rate (guardrail) | **0.136 → 0.113** |
-| Gap report vs hidden labels | 3/3 planted gaps found (ranks 2, 4, 5), 1/3 in the top 3, cluster purity 0.985 |
+| Gap report vs hidden labels | 3/3 planted gaps found (ranks 2, 4, 5), 1/3 in the top 3, cluster purity 0.985 — **identical ranks with Gemini as the agent** |
+| Feedback cycle with **Gemini 2.5 Flash** *(300 simulated calls, live model)* | target intent paired **+16 / −0** contained (p = 3 × 10⁻⁵), weather helped 0/20 → 14/20; containment 0.678 → 0.715; other intents +14 / −22 (p = 0.24, sampling noise) |
+| Gemini agent quality | cites a source in **29%** of answered turns; **3.3%** of calls lost to Vertex timeouts / 504s |
+| Live voice (2 recorded calls) | voice-to-voice **~3.1 s**; acknowledgment audio 0.35–0.9 s after endpointing; Cartesia TTFB ~0.1 s; Gemini first token 1.6–2.4 s |
 
-**Not yet measured:** live voice latency, the Deepgram comparison, answer
-correctness via the judge, handoffs triggered by a live model's own answers, and
-the feedback cycle with Claude as the agent. All of them need API keys.
+**Not yet measured:** voice latency over a real sample of calls (the 2 above
+are a smoke test, not a results directory), the Deepgram-vs-Whisper STT
+comparison, answer correctness via the LLM judge, and anything with Claude as
+the agent (the Vertex project has no Claude quota yet).
 
 ---
 
@@ -544,7 +548,7 @@ make retrieval && make ingest
 ```
 
 ```bash
-make test                 # 378 tests, ~25 s, no network
+make test                 # 381 tests, ~25 s, no network
 make faults               # fault-injection suite
 make demo-scripts         # four scripted demo beats, recorded to Postgres
 make dev                  # web app at http://localhost:8088/ · voice client /voice · console /console

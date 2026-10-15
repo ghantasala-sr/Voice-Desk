@@ -55,6 +55,8 @@ tools: |
   - Once verified, call lookup_order to answer anything about their order:
     seats, section, quantity, event, delivery. Do it; do not offer to.
   - Never answer an order-specific question from <knowledge> alone.
+  - General policy questions (refunds, ID, parking, bags, accessibility) need
+    no order details: answer them from <knowledge> without asking for any.
 
 # Spoken when a turn exceeds its latency budget, or when a provider fails.
 # Fixed strings: no model ever writes caller-facing text on a failure path.

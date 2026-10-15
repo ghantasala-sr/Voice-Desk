@@ -1,0 +1,41 @@
+{
+  "git_sha": "1e4b965",
+  "llm": {
+    "provider": "vertex_gemini",
+    "model": "gemini-2.5-flash",
+    "temperature": 0.2,
+    "max_tokens": 512,
+    "vertex_location": "global"
+  },
+  "stt": {
+    "provider": "deepgram"
+  },
+  "tts": {
+    "provider": "cartesia",
+    "voice_id": "47c38ca4-5f35-497b-b1a3-415245fb35e1"
+  },
+  "embed": {
+    "model": "BAAI/bge-small-en-v1.5"
+  },
+  "retrieval": {
+    "top_k": 4,
+    "rrf_k": 60
+  },
+  "vad": {
+    "stop_secs": 0.4,
+    "start_secs": 0.2,
+    "confidence": 0.7
+  },
+  "budgets": {
+    "turn_budget_ms": 2500,
+    "tool_timeout_ms": 4000,
+    "max_tool_iterations": 3,
+    "playout_trim_ms": 120
+  },
+  "domain": "ticketing",
+  "corpus_hash": "98138b54d0e0e5a5",
+  "corpus_hash_after": "0cf91e60e8d8741e",
+  "seed": 20261015,
+  "n_calls": 300,
+  "note": "git_sha is the commit BEFORE this run's code changes (simulator judgment, prompt TOOLS section); the run used the working tree"
+}

@@ -353,9 +353,14 @@ def render_text(report: dict[str, Any]) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Build the gap report for a simulation run.")
     parser.add_argument("--run", default=None)
+    parser.add_argument("--label", default=None,
+                        help="output directory label (default: the run's label)")
     args = parser.parse_args()
     report = asyncio.run(build_report(args.run))
-    out = ROOT / "results" / f"{date.today().isoformat()}-gap-report-{report['run'].rsplit('-', 1)[0]}"
+    label = args.label or report["run"].rsplit("-", 1)[0]
+    out = ROOT / "results" / f"{date.today().isoformat()}-gap-report-{label}"
+    if out.exists():
+        raise SystemExit(f"{out.relative_to(ROOT)} exists — runs are never overwritten; pass --label")
     out.mkdir(parents=True, exist_ok=True)
     public = {**report, "clusters": _public(report["clusters"]), "actions": _public(report["actions"])}
     (out / "metrics.json").write_text(json.dumps(public, indent=2, default=str))

@@ -188,7 +188,7 @@ def test_feedback_cycle_latest_is_404_or_valid(client: TestClient) -> None:
     assert response.status_code in (200, 404)
     if response.status_code == 200:
         body = response.json()
-        assert body["run"].endswith("-feedback-cycle")
+        assert "-feedback-cycle" in body["run"] and "superseded" not in body["run"]
         assert isinstance(body["metrics"], dict)
 
 
