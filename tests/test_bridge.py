@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import json
 
-from app.bridge import PlayoutTracker, TurnTimings, transcript_message, ws_message
+from app.bridge import AudioTimeline, PlayoutTracker, transcript_message, ws_message
 
 SAMPLE_RATE = 24_000
 BYTES_PER_SECOND = SAMPLE_RATE * 2  # PCM16
@@ -62,10 +62,44 @@ def test_reset_clears_everything() -> None:
     assert tracker.played_chars() == 0
 
 
-def test_voice_to_voice_needs_both_ends() -> None:
-    assert TurnTimings().voice_to_voice_ms() is None
-    assert TurnTimings(user_stopped_ms=100).voice_to_voice_ms() is None
-    assert TurnTimings(user_stopped_ms=100, first_audio_ms=1250).voice_to_voice_ms() == 1150
+def test_audio_timings_are_durations_measured_per_turn() -> None:
+    t = AudioTimeline()
+    t.user_stopped(1_000)
+    t.transcript(1_400)            # VAD stop -> transcript: endpointing + STT final
+    t.speak("turn-a", 1_900)
+    t.completed("turn-a")          # generation ended before any audio played
+    assert t.take_ready("turn-a") is None, "not audible yet — nothing to write"
+    assert t.audio(2_000) == "turn-a"
+    assert t.take_ready("turn-a") == {"tts_ttfb_ms": 100, "first_audio_ms": 600,
+                                      "voice_to_voice_ms": 1_000, "playout_ms": None}
+    assert t.take_ready("turn-a") is None, "written once"
+
+
+def test_late_audio_is_not_credited_to_the_next_turn() -> None:
+    """The bug: turn A's audio still playing when turn B's timings were read
+    gave voice-to-voice = -9151 ms."""
+    t = AudioTimeline()
+    t.transcript(0)
+    t.speak("turn-a", 100)
+    t.audio(300)
+    t.completed("turn-a")
+    t.audio(5_000)                 # more of turn A's audio — not a new first byte
+    t.user_stopped(10_000)
+    t.transcript(10_400)
+    t.speak("turn-b", 10_900)
+    t.completed("turn-b")
+    assert t.audio(11_100) == "turn-b"
+    assert t.take_ready("turn-b")["voice_to_voice_ms"] == 1_100
+
+
+def test_a_stale_vad_stop_is_not_used() -> None:
+    t = AudioTimeline()
+    t.user_stopped(0)
+    t.transcript(60_000)           # a minute later: not this utterance's stop
+    t.speak("x", 60_100)
+    t.completed("x")
+    t.audio(60_200)
+    assert t.take_ready("x")["voice_to_voice_ms"] is None
 
 
 def test_control_messages_are_json() -> None:
@@ -76,3 +110,18 @@ def test_control_messages_are_json() -> None:
     message = json.loads(transcript_message("agent", "hello", segment_id=2))
     assert message["role"] == "agent"
     assert message["segment_id"] == 2
+
+
+def test_a_vad_stop_after_the_transcript_still_belongs_to_it() -> None:
+    """Live: Deepgram's final arrived before VAD declared the stop, so the
+    previous utterance's stop was used and voice-to-voice read 10,372 ms."""
+    t = AudioTimeline()
+    t.user_started(0)
+    t.user_stopped(800)            # the greeting
+    t.user_started(9_000)          # the question begins
+    t.transcript(10_900)           # final transcript BEFORE the VAD stop
+    t.user_stopped(11_000)
+    t.speak("q", 11_100)
+    t.completed("q")
+    t.audio(11_500)
+    assert t.take_ready("q")["voice_to_voice_ms"] == 500

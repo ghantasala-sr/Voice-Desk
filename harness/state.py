@@ -97,6 +97,9 @@ class TurnState:
     latency_budget_ms: int = 2500
     budget_exceeded: bool = False
     ack_bypass_used: bool = False
+    #: A greeting / thanks / filler (harness.policy.is_social): no retrieval-based
+    #: handoff signal, no acknowledgment line.
+    social: bool = False
 
     # Per-stage latency, keyed by the names in docs/01 §5.
     stages_ms: dict[str, int] = field(default_factory=dict)

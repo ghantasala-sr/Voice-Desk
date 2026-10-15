@@ -25,7 +25,7 @@ from typing import Any
 
 from analytics.events import PostgresEventWriter
 from analytics.store import NullStore, PostgresStore
-from app.bridge import PlayoutTracker, TurnTimings, transcript_message, ws_message
+from app.bridge import AudioTimeline, PlayoutTracker, transcript_message, ws_message
 from core.clock import SystemClock
 from core.ids import new_id
 from core.logging import bind_call, get_logger
@@ -129,7 +129,7 @@ class _Session:
         self._playout_end_ms = 0
         self._bot_speaking = False
         self._bot_changed_ms = 0
-        self.timings = TurnTimings()
+        self.timeline = AudioTimeline()
         self.current_turn_id: str | None = None
         self.tts: Any = None  # set by _run_audio
 
@@ -144,6 +144,7 @@ class _Session:
                 self._queued_segments.clear()
             self.playout.segment_started(command.segment_id, command.text)
             self._queued_segments.append(command.segment_id)
+            self.timeline.speak(command.context_id, self.clock.now_ms())
             await self.websocket.send_text(
                 transcript_message("agent", command.text, segment_id=command.segment_id)
             )
@@ -170,23 +171,14 @@ class _Session:
         elif isinstance(command, TurnCompleted):
             turn = command.turn
             await self.store.save_turn(self.call, turn)
-            # Stages [G] and [H] are measured out here, not in the harness.
-            await self.store.update_turn_audio_timing(
-                turn.turn_id,
-                tts_ttfb_ms=self.timings.tts_ttfb_ms,
-                playout_ms=self.timings.playout_ms,
-                first_audio_ms=self.timings.first_audio_ms,
-                voice_to_voice_ms=self.timings.voice_to_voice_ms(),
-            )
             await self.websocket.send_text(
-                ws_message(
-                    "metrics",
-                    stages=turn.stages_ms,
-                    stop_reason=turn.stop_reason,
-                    voice_to_voice_ms=self.timings.voice_to_voice_ms(),
-                )
+                ws_message("metrics", stages=turn.stages_ms, stop_reason=turn.stop_reason,
+                           voice_to_voice_ms=None)
             )
-            self.timings = TurnTimings()
+            # Stages [G] and [H] are measured out here, not in the harness —
+            # and usually AFTER this point, when the turn's audio starts.
+            self.timeline.completed(turn.turn_id)
+            await self._write_audio_timing(turn.turn_id)
 
         elif isinstance(command, EndCall):
             await self.drain_speech()
@@ -196,15 +188,37 @@ class _Session:
 
     # -- inbound, called by the Pipecat shim --------------------------------
     def on_user_started_speaking(self) -> None:
-        """Barge-in. `played_chars` is the honest estimate of what was heard."""
+        """Barge-in. `played_chars` is the honest estimate of what was heard.
+
+        Only while the agent is SPEAKING (audio playing or queued). Found live:
+        VAD fired once more on a short "Hi there." while the model was still
+        thinking; the turn was cancelled with nothing said and the caller got
+        silence. Before the agent speaks there is nothing to interrupt — if the
+        caller says more, it arrives as the next transcript."""
+        self.timeline.user_started(self.clock.now_ms())
+        if not (self._bot_speaking or (self.tts is not None and self.tts.busy())):
+            log.info("barge_in_ignored", reason="agent_not_speaking")
+            return
         self.stream.put(BargeIn(played_chars=self.playout.played_chars()))
 
     def on_user_stopped_speaking(self) -> None:
-        self.timings.user_stopped_ms = self.clock.now_ms()
+        self.timeline.user_stopped(self.clock.now_ms())
+
+    async def _write_audio_timing(self, turn_id: str) -> None:
+        timings = self.timeline.take_ready(turn_id)
+        if timings is None:
+            return
+        try:
+            await self.store.update_turn_audio_timing(turn_id, **timings)
+            await self.websocket.send_text(ws_message("metrics", audio=timings,
+                                                      voice_to_voice_ms=timings["voice_to_voice_ms"]))
+        except Exception as exc:  # a closed socket must not lose the DB write's error
+            log.warning("audio_timing_not_sent", detail=str(exc))
 
     def on_final_transcript(self, text: str, confidence: float,
                             words: list[tuple[str, float]], provider: str) -> None:
         endpoint_ms = int(self.call.config_snapshot["vad"]["stop_secs"] * 1000)
+        self.timeline.transcript(self.clock.now_ms())
         self.stream.put(
             TranscriptIn(
                 text=text,
@@ -221,8 +235,10 @@ class _Session:
         now = self.clock.now_ms()
         self._playout_end_ms = max(self._playout_end_ms, now) + num_bytes * 1000 // (OUTPUT_SAMPLE_RATE * 2)
         self.playout.audio_delivered(num_bytes)
-        if self.timings.first_audio_ms is None:
-            self.timings.first_audio_ms = self.clock.now_ms()
+        started = self.timeline.audio(now)
+        if started is not None:
+            # Called from the serializer (sync): write the row from a task.
+            asyncio.get_running_loop().create_task(self._write_audio_timing(started))
 
     def on_segment_drained(self, segment_id: int) -> None:
         self.playout.segment_completed(segment_id)
@@ -395,6 +411,9 @@ class _TTSAdapter:
 
     def segment_done(self) -> None:
         self._done.set()
+
+    def busy(self) -> bool:
+        return not self._idle.is_set()
 
     async def wait_idle(self, limit_s: float) -> None:
         try:

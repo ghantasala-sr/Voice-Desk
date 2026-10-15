@@ -36,3 +36,26 @@ def retrieval_sufficiency_threshold(domain: str) -> float:
 
 def claim_overlap_min(domain: str) -> float:
     return float(load_policy(domain).get("checker", {}).get("claim_overlap_min", 0.25))
+
+
+# Greetings, thanks and filler. Deliberately small and closed: an utterance is
+# social only if EVERY word is in this set, so anything with a topic — "tell me
+# a joke", "what's the capital of France" — is not, and still goes through the
+# retrieval-based handoff rules. Found live: "Hi there." scored 0.478 against
+# the knowledge base (there is nothing to retrieve for a greeting), tripped
+# retrieval_very_weak, and the caller was handed to a human after saying hello.
+_SOCIAL_WORDS = frozenset("""
+    hi hello hey hiya howdy yo there good morning afternoon evening day
+    thanks thank you cheers ok okay alright right great cool nice perfect
+    um uh uhm hmm er so well oh ah bye goodbye see ya later
+    how are is it going doing today
+""".split())
+_SOCIAL_MAX_WORDS = 6
+
+
+def is_social(text: str) -> bool:
+    """A greeting, a thanks, or filler — no question for the knowledge base."""
+    import re
+
+    words = re.findall(r"[a-z']+", text.lower().replace("\u2019", "'"))
+    return 0 < len(words) <= _SOCIAL_MAX_WORDS and all(w in _SOCIAL_WORDS for w in words)

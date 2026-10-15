@@ -80,6 +80,37 @@ The editable `.[audio]` install fails to build here.
     present.
 - **`PlayoutTracker` assumed 24 kHz.** The browser plays 16 kHz.
 
+**A caller saying "hi" was handed to a human.** Found by a person on the first real call:
+- **What the caller heard:** "Let me check that for you. Hello, thank you for calling…
+  My name is and I'll be helping you today. I'm going to connect you with a colleague."
+- **Four causes, four fixes:**
+  - **The handoff.** A greeting has nothing to retrieve (0.478), so `retrieval_very_weak`
+    fired. `harness.policy.is_social()`, a closed word set, now exempts greetings, thanks and
+    filler from the retrieval signals. None of the 94 labelled cases is social, so the
+    calibration is unaffected.
+  - **The acknowledgment.** It no longer plays on a social turn.
+  - **"My name is and".** Gemini declined to invent a name and left the hole. The style
+    prompt now says the agent has no name, and how to answer a bare greeting.
+  - **A phantom barge-in.** VAD fired while the model was still thinking, cancelling the
+    turn with nothing said. A barge-in now counts only while the agent is speaking or has
+    speech queued.
+- **Two more fixes from the same session:**
+  - **A Vertex stall ended the call.** A provider error now retries once even past the
+    budget, if the caller has heard only filler.
+  - **Audio latency was written wrong.** `first_audio_ms` held an absolute clock reading,
+    and timings were read at TurnCompleted, before the turn's own audio. The previous
+    turn's audio was credited to the next one, giving voice-to-voice = −9151 ms.
+    `AudioTimeline` now keeps per-turn timestamps, attributes a late VAD stop to its own
+    transcript, and writes the row once the turn is both saved and audible.
+
+**Second measurement** (2 warm calls of "Hi there." then "Can I bring a bag into the
+venue?", synthesized audio; not a results directory):
+
+| turn | Gemini first token | TTS first byte | transcript → first audio | voice-to-voice |
+|---|---|---|---|---|
+| greeting (no acknowledgment) | 1.7–1.8 s | 119–137 ms | ~2.0 s | **~1.8 s** |
+| question (acknowledgment first) | 0.76–1.24 s | ~118 ms | ~0.47 s | **~0.3 s**, to the acknowledgment |
+
 **First numbers** (2 calls with recorded utterances, not a results directory):
 
 - Voice-to-voice **3.1 s** on a warm-ish call. The first audio, the acknowledgment line,

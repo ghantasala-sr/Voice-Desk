@@ -53,7 +53,7 @@ from harness.events import (
 )
 from harness.handoff import HandoffDecision, HandoffPolicy, build_summary, render_summary
 from harness.normalize import strip_citations, to_spoken
-from harness.policy import claim_overlap_min, retrieval_sufficiency_threshold
+from harness.policy import claim_overlap_min, is_social, retrieval_sufficiency_threshold
 from harness.retriever import NullRetriever, Retriever, empty_result
 from harness.segmenter import Segmenter
 from harness.state import CallState, CheckerVerdict, TurnState
@@ -191,6 +191,8 @@ class Harness:
                 yield Emit("stt_final", {"text": event.text, "confidence": event.confidence,
                                          "provider": event.provider}, turn.turn_id)
 
+                turn.social = is_social(event.text)
+
                 # --- 1. pre-gate: hard utterance rules, no model call -------
                 decision = self.policy.pre_gate(event.text) if handing_off else None
                 if decision and decision.should_handoff:
@@ -253,7 +255,9 @@ class Harness:
                         turn.transactional = bool(
                             run.tool_texts or run.readback_started or run.action_note
                         )
-                        if not turn.transactional:
+                        # Nor on a greeting: "Hi there." has nothing to
+                        # retrieve, and must not hand the caller to a human.
+                        if not turn.transactional and not turn.social:
                             self.policy.retrieval_signal(
                                 turn,
                                 knowledge_available=not isinstance(self.retriever, NullRetriever),
@@ -690,7 +694,13 @@ class Harness:
                 turn.turn_id,
             )
             tool_calls.clear()
-            if attempt == 2 or remaining < LLM_RETRY_MIN_BUDGET_MS:
+            # Retry once while the budget allows — or, budget or not, while the
+            # caller has heard nothing but filler (an acknowledgment, the
+            # "give me a second" line). A single Vertex stall used to end the
+            # call with the provider_error line; a second attempt is cheaper
+            # than a handoff when nothing has been promised yet.
+            nothing_said = not turn.approved_text
+            if attempt == 2 or (remaining < LLM_RETRY_MIN_BUDGET_MS and not nothing_said):
                 turn.handoff_signals.append("llm_failure")
                 yield self._speak(
                     turn, prompts.fallback_line(self.domain, "provider_error"),
@@ -986,6 +996,9 @@ class Harness:
     ) -> AsyncIterator[OutCommand]:
         if state.spoke_anything:
             return
+
+        if name == "ack" and turn.social:
+            return  # "Let me check that for you." is not a reply to "hi"
 
         if name == "ack":
             # Fixed strings with no checkable content by construction, so they

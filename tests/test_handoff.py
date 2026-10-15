@@ -221,3 +221,39 @@ async def test_merely_weak_retrieval_still_only_contributes(settings) -> None:
     assert "retrieval_insufficient" in result.turn.handoff_signals
     assert "retrieval_very_weak" not in result.turn.handoff_signals
     assert result.stop_reason == "answered"
+
+
+async def test_a_greeting_is_not_handed_off_on_weak_retrieval(settings) -> None:
+    """Found live: "Hi there." scored 0.478 against the knowledge base, tripped
+    retrieval_very_weak, and the caller was passed to a human after saying hi —
+    preceded by "Let me check that for you."."""
+    slow_hello = [{"text": "Hi, how can I help you today? ", "delay_ms": 500},
+                  {"end": {"stop_reason": "end_turn"}}]
+    driver, _, _ = tool_driver(settings, slow_hello, handoff_enabled=True, ack_after_ms=50,
+                               retriever=FakeRetriever.with_chunks(["x"], top_vec_score=0.45))
+    async with driver:
+        result = await driver.say("Hi there.")
+
+    assert result.stop_reason == "answered"
+    assert result.turn.social
+    assert "retrieval_very_weak" not in result.turn.handoff_signals
+    assert result.spoken == ["Hi, how can I help you today?"], "no acknowledgment for a greeting"
+
+
+async def test_a_real_question_with_the_same_score_still_hands_off(settings) -> None:
+    driver, _, _ = tool_driver(settings, ANSWER, handoff_enabled=True,
+                               retriever=FakeRetriever.with_chunks(["x"], top_vec_score=0.45))
+    async with driver:
+        result = await driver.say("Is there a group discount for fourteen people?")
+    assert result.stop_reason == "handoff"
+
+
+@pytest.mark.parametrize("text, social", [
+    ("Hi there.", True), ("hello", True), ("Thanks!", True), ("Hey, how are you doing today?", True),
+    ("Tell me a joke", False), ("What's the capital of France?", False),
+    ("hi, where are my tickets", False), ("yes", False),
+])
+def test_social_utterances_are_a_closed_set(text: str, social: bool) -> None:
+    from harness.policy import is_social
+
+    assert is_social(text) is social

@@ -77,25 +77,96 @@ class PlayoutTracker:
         return total
 
 
-@dataclass
-class TurnTimings:
-    """Audio-side stages the harness cannot see.
+class AudioTimeline:
+    """Per-turn audio timestamps, kept until the turn's FIRST AUDIO exists.
 
-    The harness measures up to the moment it hands a segment to TTS. Stages
-    [G] (TTS time-to-first-byte) and [H] (playout start) are measured here and
-    written onto the turn row afterwards, rather than guessed at by the
-    harness. See analytics/store.py::update_turn_audio_timing.
+    Replaces writing TurnTimings at TurnCompleted. The harness completes a turn
+    when generation ends, which is usually BEFORE its audio has played; the
+    timings were then reset and the previous turn's still-playing audio was
+    credited to the next turn (one live turn recorded voice-to-voice = -9151 ms,
+    and first_audio_ms held an absolute clock reading).
+
+    Every value is a DURATION in ms:
+      tts_ttfb_ms        first Speak of the turn -> its first audio byte out
+      first_audio_ms     transcript in -> first audio byte out
+      voice_to_voice_ms  caller stopped (VAD) -> first audio byte out
+    A turn's timings are ready once BOTH the turn is saved and its audio began.
     """
 
-    user_stopped_ms: int | None = None
-    tts_ttfb_ms: int | None = None
-    playout_ms: int | None = None
-    first_audio_ms: int | None = None
+    #: A VAD stop older than this is not the end of THIS utterance.
+    MAX_STOP_TO_TRANSCRIPT_MS = 10_000
 
-    def voice_to_voice_ms(self) -> int | None:
-        if self.user_stopped_ms is None or self.first_audio_ms is None:
+    def __init__(self) -> None:
+        self._last_stop: int | None = None
+        self._last_start: int | None = None
+        self._pending: tuple[int, int | None] | None = None   # (transcript_at, stopped_at)
+        #: The transcript (pending, or already a turn) still waiting for the
+        #: VAD stop of its own utterance.
+        self._awaiting_stop: str | None = None
+        self._turns: dict[str, dict[str, Any]] = {}
+        self._current: str | None = None
+
+    def user_started(self, now: int) -> None:
+        self._last_start = now
+
+    def user_stopped(self, now: int) -> None:
+        self._last_stop = now
+        # Deepgram's final transcript often lands BEFORE VAD declares the end
+        # of speech (VAD waits stop_secs of silence). That stop belongs to the
+        # transcript that is waiting for it — not to the previous utterance.
+        if self._awaiting_stop == "pending" and self._pending is not None:
+            self._pending = (self._pending[0], now)
+        elif self._awaiting_stop in self._turns:
+            self._turns[self._awaiting_stop]["stopped_at"] = now
+        self._awaiting_stop = None
+
+    def transcript(self, now: int) -> None:
+        stop = self._last_stop
+        still_speaking = self._last_start is not None and (stop is None or self._last_start > stop)
+        if still_speaking or (stop is not None and not 0 <= now - stop <= self.MAX_STOP_TO_TRANSCRIPT_MS):
+            stop = None
+        self._awaiting_stop = "pending" if still_speaking else None
+        self._pending = (now, stop)
+
+    def speak(self, turn_id: str, now: int) -> None:
+        if turn_id in self._turns:
+            return
+        transcript_at, stopped_at = self._pending or (None, None)
+        self._pending = None
+        self._turns[turn_id] = {"transcript_at": transcript_at, "stopped_at": stopped_at,
+                                "first_speak_at": now, "first_audio_at": None,
+                                "completed": False, "written": False}
+        self._current = turn_id
+        if self._awaiting_stop == "pending":
+            self._awaiting_stop = turn_id
+
+    def audio(self, now: int) -> str | None:
+        """First audio byte of the current turn? Returns its id if so."""
+        turn = self._turns.get(self._current or "")
+        if turn is None or turn["first_audio_at"] is not None:
             return None
-        return self.first_audio_ms - self.user_stopped_ms
+        turn["first_audio_at"] = now
+        return self._current
+
+    def completed(self, turn_id: str) -> None:
+        if turn_id in self._turns:
+            self._turns[turn_id]["completed"] = True
+
+    def take_ready(self, turn_id: str) -> dict[str, int | None] | None:
+        """The turn's timings, once, when saved AND audible; else None."""
+        t = self._turns.get(turn_id)
+        if t is None or t["written"] or not t["completed"] or t["first_audio_at"] is None:
+            return None
+        t["written"] = True
+        audio = t["first_audio_at"]
+
+        def since(start: int | None) -> int | None:
+            return audio - start if start is not None and audio >= start else None
+        # Not ready while this turn still waits for its own VAD stop — unless
+        # the audio is long past, in which case the stop is simply unknown.
+
+        return {"tts_ttfb_ms": since(t["first_speak_at"]), "first_audio_ms": since(t["transcript_at"]),
+                "voice_to_voice_ms": since(t["stopped_at"]), "playout_ms": None}
 
 
 # ---------------------------------------------------------------------------

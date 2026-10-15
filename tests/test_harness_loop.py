@@ -332,3 +332,20 @@ async def test_a_provider_that_raises_does_not_crash_the_call(make_driver) -> No
     assert result.stop_reason == "error"
     assert result.turn.llm_iterations == 2
     assert result.spoken == ["I'm having trouble on my end. Let me get a colleague for you."]
+
+
+async def test_a_stall_is_retried_even_past_the_budget_if_nothing_was_said(make_driver) -> None:
+    """Found live on Vertex: a 10 s read timeout left no budget, so the caller
+    got the provider_error line and a handoff signal. When they have heard
+    nothing but filler, one more attempt is the better trade."""
+    events = [
+        {"end": {"stop_reason": "error", "error": "ReadTimeout"}, "delay_ms": 200},
+        {"text": "Bags up to the size of a sheet of paper are allowed. "},
+        {"end": {"stop_reason": "end_turn"}},
+    ]
+    async with make_driver(events, turn_budget_ms=60) as driver:
+        result = await driver.say("can I bring a bag?")
+
+    assert result.turn.llm_iterations == 2
+    assert "llm_failure" not in result.turn.handoff_signals
+    assert result.spoken[-1] == "Bags up to the size of a sheet of paper are allowed."
