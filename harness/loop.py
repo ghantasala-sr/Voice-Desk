@@ -185,6 +185,11 @@ class Harness:
             ) as turn_span:
                 turn.trace_id = current_trace_id()
                 yield Emit("turn_started", {"user_text": event.text}, turn.turn_id)
+                # The transcript the harness acted on — what the gap report
+                # and the STT-confidence analysis read. Partials never reach
+                # the harness, so there is no stt_partial event (docs/03).
+                yield Emit("stt_final", {"text": event.text, "confidence": event.confidence,
+                                         "provider": event.provider}, turn.turn_id)
 
                 # --- 1. pre-gate: hard utterance rules, no model call -------
                 decision = self.policy.pre_gate(event.text) if handing_off else None
@@ -600,6 +605,8 @@ class Harness:
                 iteration=turn.llm_iterations, attempt=attempt,
             ) as llm_span:
                 llm_span.set(model=self.llm.model)
+                yield Emit("llm_iteration_started",
+                           {"iteration": turn.llm_iterations, "attempt": attempt}, turn.turn_id)
                 stream = _stream_until(
                     self.llm.stream(request),
                     interrupt=watcher.flag,
@@ -668,6 +675,10 @@ class Harness:
 
             end = state.stream_end
             if end is None or end.stop_reason != "error":
+                if end is not None:
+                    yield Emit("llm_text_completed",
+                               {"stop_reason": end.stop_reason, "chars": len(turn.generated_text),
+                                "output_tokens": end.output_tokens}, turn.turn_id)
                 return  # clean finish
 
             remaining = turn.latency_budget_ms - stopwatch.elapsed_ms()

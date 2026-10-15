@@ -1,0 +1,246 @@
+{
+  "run": "2026-10-15-handoff-calibration",
+  "n": 94,
+  "positives": 42,
+  "configs": {
+    "current": {
+      "precision": {
+        "value": 0.8182,
+        "n": 44,
+        "successes": 36,
+        "ci95": [
+          0.6804,
+          0.9049
+        ]
+      },
+      "recall": {
+        "value": 0.8571,
+        "n": 42,
+        "successes": 36,
+        "ci95": [
+          0.7216,
+          0.9328
+        ]
+      },
+      "f1": 0.8372,
+      "tp": 36,
+      "fp": 8,
+      "fn": 6,
+      "n": 94,
+      "positives": 42,
+      "no_tool_path": {
+        "precision": {
+          "value": 0.8571,
+          "n": 42,
+          "successes": 36,
+          "ci95": [
+            0.7216,
+            0.9328
+          ]
+        },
+        "recall": {
+          "value": 0.8571,
+          "n": 42,
+          "successes": 36,
+          "ci95": [
+            0.7216,
+            0.9328
+          ]
+        },
+        "f1": 0.8571,
+        "n": 79,
+        "positives": 42
+      },
+      "false_negatives": [
+        "vip_contents",
+        "id_for_late_show",
+        "carer_ticket_free",
+        "account_hacked",
+        "esc_exception_bereavement",
+        "esc_fake_tickets_my_name"
+      ],
+      "false_positives": [
+        "refund_timing_cancelled",
+        "what_seats",
+        "restaurant_recommendation",
+        "arithmetic",
+        "disclose_without_verification",
+        "neg_hearing_loop",
+        "neg_capital_france",
+        "neg_tell_joke"
+      ],
+      "recall_by_group": {
+        "escalation": "22/24",
+        "hard_rule": "7/7",
+        "held_out": "4/6",
+        "judgment": "3/5"
+      },
+      "hard_rule_llm_calls": 0
+    },
+    "one_level": {
+      "precision": {
+        "value": 1.0,
+        "n": 15,
+        "successes": 15,
+        "ci95": [
+          0.7961,
+          1.0
+        ]
+      },
+      "recall": {
+        "value": 0.3571,
+        "n": 42,
+        "successes": 15,
+        "ci95": [
+          0.2299,
+          0.5083
+        ]
+      },
+      "f1": 0.5263,
+      "tp": 15,
+      "fp": 0,
+      "fn": 27,
+      "n": 94,
+      "positives": 42,
+      "no_tool_path": {
+        "precision": {
+          "value": 1.0,
+          "n": 15,
+          "successes": 15,
+          "ci95": [
+            0.7961,
+            1.0
+          ]
+        },
+        "recall": {
+          "value": 0.3571,
+          "n": 42,
+          "successes": 15,
+          "ci95": [
+            0.2299,
+            0.5083
+          ]
+        },
+        "f1": 0.5263,
+        "n": 79,
+        "positives": 42
+      },
+      "false_negatives": [
+        "vip_contents",
+        "group_rate_fourteen",
+        "rain_cancel",
+        "lightning_delay",
+        "eighteen_plus",
+        "id_for_late_show",
+        "carer_ticket_free",
+        "insist_out_of_policy",
+        "account_hacked",
+        "staff_complaint",
+        "legal_threat",
+        "esc_hospitality_box",
+        "esc_meet_greet_price",
+        "esc_school_trip_rate",
+        "esc_group_deposit",
+        "esc_thunder_stop",
+        "esc_storm_warning",
+        "esc_lumen_twentyone",
+        "esc_fifteen_alone",
+        "esc_student_card_id",
+        "esc_club_age_limit",
+        "esc_exception_bereavement",
+        "esc_interpreter_short_notice",
+        "esc_fake_tickets_my_name",
+        "esc_injured_at_venue",
+        "esc_journalist",
+        "esc_delete_my_data"
+      ],
+      "false_positives": [],
+      "recall_by_group": {
+        "escalation": "8/24",
+        "hard_rule": "7/7",
+        "held_out": "0/6",
+        "judgment": "0/5"
+      },
+      "hard_rule_llm_calls": 0
+    },
+    "no_patterns": {
+      "precision": {
+        "value": 0.7949,
+        "n": 39,
+        "successes": 31,
+        "ci95": [
+          0.6447,
+          0.8922
+        ]
+      },
+      "recall": {
+        "value": 0.7381,
+        "n": 42,
+        "successes": 31,
+        "ci95": [
+          0.5893,
+          0.847
+        ]
+      },
+      "f1": 0.7654,
+      "tp": 31,
+      "fp": 8,
+      "fn": 11,
+      "n": 94,
+      "positives": 42,
+      "no_tool_path": {
+        "precision": {
+          "value": 0.8378,
+          "n": 37,
+          "successes": 31,
+          "ci95": [
+            0.6886,
+            0.9235
+          ]
+        },
+        "recall": {
+          "value": 0.7381,
+          "n": 42,
+          "successes": 31,
+          "ci95": [
+            0.5893,
+            0.847
+          ]
+        },
+        "f1": 0.7848,
+        "n": 79,
+        "positives": 42
+      },
+      "false_negatives": [
+        "vip_contents",
+        "id_for_late_show",
+        "chargeback",
+        "unauthorized_charge",
+        "fraud_didnt_buy",
+        "carer_ticket_free",
+        "account_hacked",
+        "esc_disputing_card",
+        "esc_didnt_authorize",
+        "esc_exception_bereavement",
+        "esc_fake_tickets_my_name"
+      ],
+      "false_positives": [
+        "refund_timing_cancelled",
+        "what_seats",
+        "restaurant_recommendation",
+        "arithmetic",
+        "disclose_without_verification",
+        "neg_hearing_loop",
+        "neg_capital_france",
+        "neg_tell_joke"
+      ],
+      "recall_by_group": {
+        "escalation": "20/24",
+        "hard_rule": "4/7",
+        "held_out": "4/6",
+        "judgment": "3/5"
+      },
+      "hard_rule_llm_calls": 0
+    }
+  }
+}

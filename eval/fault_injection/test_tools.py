@@ -7,6 +7,8 @@ is a real duplicate, caused by the harness.
 
 from __future__ import annotations
 
+import asyncio
+
 import pytest
 
 from eval.fault_injection.conftest import TRANSFER
@@ -210,3 +212,23 @@ async def test_ambiguity_only_applies_to_writes(executor_for, verified_call) -> 
         verified_call, "t1", "lookup_order", {"order_id": "TK-88213"}
     )
     assert outcome.ok
+
+
+async def test_two_dispatchers_of_one_pending_execution_send_one_request(
+    executor_for, verified_call, backend
+) -> None:
+    """The race the Postgres suite caught intermittently in week 4: the loser
+    of the insert finds the row still `pending` and gets the SAME execution
+    back. Both then dispatch. The pending -> dispatched transition must be a
+    compare-and-set, or both reach the backend. Deterministic here: both
+    prepares complete before either dispatch starts."""
+    ex = executor_for("benign")
+    first = await ex.prepare(verified_call, None, "transfer_tickets", TRANSFER)
+    second = await ex.prepare(verified_call, None, "transfer_tickets", TRANSFER)
+    assert first.execution.execution_id == second.execution.execution_id
+
+    results = await asyncio.gather(ex.dispatch(verified_call, first),
+                                   ex.dispatch(verified_call, second))
+    assert all(r.ok for r in results)
+    assert backend.count_effects("transfer_tickets") == 1
+    assert sum(r.duplicate_suppressed for r in results) == 1

@@ -139,7 +139,7 @@ CREATE INDEX call_events_type_idx ON call_events (event_type, ts DESC);
 
 ```
 call_started            turn_started           retrieval_completed
-stt_final               stt_partial            llm_iteration_started
+stt_final               simulation_label       llm_iteration_started
 llm_tool_call           llm_text_completed     checker_verdict
 readback_spoken         readback_confirmed     readback_rejected
 tool_dispatched         tool_committed         tool_failed
@@ -147,7 +147,13 @@ tool_cancelled          tool_unknown           tool_reconciled
 filler_spoken           barge_in               context_trimmed
 handoff_signal_raised   handoff_triggered      budget_exceeded
 turn_completed          call_ended             error
+silence_reprompt
 ```
+
+`stt_partial` was in the original vocabulary and was removed in week 4 by the
+event-completeness audit (W4-2): partial transcripts stay inside Pipecat and never
+reach the harness, so nothing could emit it. A vocabulary entry that cannot occur
+is a query that silently returns nothing.
 
 ### `tool_executions`
 

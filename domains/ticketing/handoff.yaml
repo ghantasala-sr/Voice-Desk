@@ -52,10 +52,11 @@ hard_rules:
 soft_signals:
   retrieval_insufficient:
     weight: 0.45
-    # CALIBRATED — results/2026-10-13-retrieval-calibration/ (n=36 covered,
-    # 28 uncovered). Raw dense cosine of the best chunk (AUC 0.91), NOT the
-    # fused margin (AUC 0.53). Lowest threshold catching >= 90% of uncovered
-    # queries: recall 26/28, at a 13/36 false-alarm rate on covered ones.
+    # CALIBRATED — results/2026-10-15-retrieval-calibration/ (n=36 covered,
+    # 28 uncovered; re-run after the week-4 top_vec_score fix, superseding
+    # 2026-10-13). Raw dense cosine of the best chunk (AUC 0.93), NOT the
+    # fused margin (AUC 0.51). Lowest threshold catching >= 90% of uncovered
+    # queries: recall 26/28, at a 12/36 false-alarm rate on covered ones.
     # That false-alarm rate is why this stays a SOFT signal that cannot hand
     # off on its own.
     threshold_top_vec_score: 0.688
@@ -64,7 +65,9 @@ soft_signals:
     # A second, stricter level that CAN hand off on its own (weight >= the 0.6
     # threshold). CALIBRATED — results/2026-10-13-handoff-calibration/: on 79
     # non-tool cases it lifts handoff recall from 0.31 to 0.81 at precision
-    # 0.79. Raising it to 0.688 adds 3 catches for 6 false handoffs, mostly
+    # 0.79. Re-run after the top_vec_score fix
+    # (results/2026-10-15-handoff-calibration/): recall 0.86, precision 0.86
+    # on the non-tool path, 0.36 recall without this level. Raising it to 0.688 adds 3 catches for 6 false handoffs, mostly
     # everyday refund questions, which would gut containment.
     weight: 0.60
     threshold_top_vec_score: 0.62

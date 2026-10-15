@@ -1,0 +1,86 @@
+GAP REPORT · run cycle-before-01M5049K · 300 calls · 25 clusters · 94 unclustered
+
+RANKED ACTIONS (troubled calls attributed to the fix that would help them)
+
+#1  WEAK_COVERAGE  →  02-ticket-transfers.md
+    20 troubled calls (6.7% of all) across 4 cluster(s)   priority 20.0
+    Rewrite or expand 02-ticket-transfers.md — it is what these calls retrieve, and they still fail. Use the callers' own words (see examples).
+      "Something came up and I can't go. Do I get my money back?"
+      "My friend needs some of my tickets."
+      "I need to give two tickets to my friend, the email is friend@example.com."
+
+#2  HELD_OUT_COVERAGE  →  11-weather-and-outdoor-events.md
+    19 troubled calls (6.3% of all) across 3 cluster(s)   priority 19.0
+    Ingest 11-weather-and-outdoor-events.md: it exists, answers these questions better than anything indexed, and is not in the knowledge base.
+      "What happens if there's lightning during the concert?"
+      "Hi there, I bought tickets a while ago and I've got a question. Is the amphitheatre show cancelled for bad weather?"
+      "Does the outdoor show go ahead if it rains?"
+
+#3  WEAK_COVERAGE  →  04-delivery-mobile-and-willcall.md
+    18 troubled calls (6.0% of all) across 2 cluster(s)   priority 18.0
+    Rewrite or expand 04-delivery-mobile-and-willcall.md — it is what these calls retrieve, and they still fail. Use the callers' own words (see examples).
+      "The app isn't working for me."
+      "What do I need to know before I get to the venue?"
+      "I saw something about my show online."
+
+#4  HELD_OUT_COVERAGE  →  10-group-and-vip-packages.md
+    13 troubled calls (4.3% of all) across 2 cluster(s)   priority 13.0
+    Ingest 10-group-and-vip-packages.md: it exists, answers these questions better than anything indexed, and is not in the knowledge base.
+      "Hi there, I bought tickets a while ago and I've got a question. We're a group of fourteen. Is there a group discount?"
+      "How much is a hospitality suite?"
+      "We're a group of fourteen. Is there a group discount?"
+
+#5  WEAK_COVERAGE  →  08-payment-and-billing.md
+    9 troubled calls (3.0% of all) across 2 cluster(s)   priority 8.1
+    Rewrite or expand 08-payment-and-billing.md — it is what these calls retrieve, and they still fail. Use the callers' own words (see examples).
+      "Hi, um, it's about my order."
+      "Something looks off with my payment."
+      "I need to sort something out with my payment, I can't go anymore."
+
+#6  HELD_OUT_COVERAGE  →  12-age-restrictions-and-id.md
+    8 troubled calls (2.7% of all) across 1 cluster(s)   priority 6.4
+    Ingest 12-age-restrictions-and-id.md: it exists, answers these questions better than anything indexed, and is not in the knowledge base.
+      "What ID do I need for the late show?"
+      "Hi there, I bought tickets a while ago and I've got a question. Can my sixteen year old come in with me?"
+      "Hi there, I bought tickets a while ago and I've got a question. Is the club night eighteen plus?"
+
+#7  WEAK_COVERAGE  →  01-refunds-and-exchanges.md
+    8 troubled calls (2.7% of all) across 1 cluster(s)   priority 6.4
+    Rewrite or expand 01-refunds-and-exchanges.md — it is what these calls retrieve, and they still fail. Use the callers' own words (see examples).
+      "It's about getting money back."
+
+#8  WEAK_COVERAGE  →  05-venue-bag-policy.md
+    8 troubled calls (2.7% of all) across 2 cluster(s)   priority 6.4
+    Rewrite or expand 05-venue-bag-policy.md — it is what these calls retrieve, and they still fail. Use the callers' own words (see examples).
+      "We want to make it a bit special for a big group."
+      "Can I bring a backpack to the show?"
+
+#9  WEAK_COVERAGE  →  06-venue-parking.md
+    5 troubled calls (1.7% of all) across 1 cluster(s)   priority 2.5
+    Rewrite or expand 06-venue-parking.md — it is what these calls retrieve, and they still fail. Use the callers' own words (see examples).
+      "Is the club night eighteen plus?"
+      "Where do the Ubers pick up after the concert?"
+      "I'm a bit lost with my booking."
+
+#10  WEAK_COVERAGE  →  09-resale-and-face-value.md
+    5 troubled calls (1.7% of all) across 1 cluster(s)   priority 2.5
+    Rewrite or expand 09-resale-and-face-value.md — it is what these calls retrieve, and they still fail. Use the callers' own words (see examples).
+      "I'd like my money back for my tickets."
+
+#11  WEAK_COVERAGE  →  07-accessibility.md
+    2 troubled calls (0.7% of all) across 2 cluster(s)   priority 0.4
+    Rewrite or expand 07-accessibility.md — it is what these calls retrieve, and they still fail. Use the callers' own words (see examples).
+      "I have some accessibility needs for the show."
+      "Is it okay to bring my teenager?"
+
+#12  WEAK_COVERAGE  →  03-event-cancellation-postponement.md
+    2 troubled calls (0.7% of all) across 1 cluster(s)   priority 0.4
+    Rewrite or expand 03-event-cancellation-postponement.md — it is what these calls retrieve, and they still fail. Use the callers' own words (see examples).
+      "I'm worried about the forecast for Friday."
+      "I heard the summer opener might be cancelled. Is it still on?"
+
+SCORED AGAINST THE HIDDEN LABELS (after the fact):
+  planted gaps whose document is a top-3 action: 1/3
+  rank of each: {'age_restriction_id': 6, 'group_booking_vip': 4, 'weather_outdoor': 2}
+  false positives in top 3: none
+  mean cluster purity: 0.985

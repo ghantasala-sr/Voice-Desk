@@ -1,0 +1,1253 @@
+{
+  "report_id": "01M504GSRYSTA8MQ9B62SHWGJM",
+  "run": "cycle-before-01M5049K",
+  "generated_at": "2026-10-15T15:57:29.246086+00:00",
+  "call_count": 300,
+  "clusters": [
+    {
+      "cluster_id": -1,
+      "label": "miscellaneous",
+      "keywords": [],
+      "n_calls": 94,
+      "share": 0.3133,
+      "failure_rate": 0.3298,
+      "weak_retrieval_rate": 0.4362,
+      "trouble_rate": 0.4362,
+      "median_top_vec_score": 0.6817,
+      "handoff_reasons": {
+        "retrieval_very_weak": 29,
+        "retrieval_insufficient": 2
+      },
+      "dominant_handoff_reason": "retrieval_very_weak",
+      "covering_docs": [
+        {
+          "doc": "04-delivery-mobile-and-willcall.md",
+          "count": 25
+        },
+        {
+          "doc": "02-ticket-transfers.md",
+          "count": 15
+        },
+        {
+          "doc": "07-accessibility.md",
+          "count": 13
+        }
+      ],
+      "held_out_match": {
+        "doc": "12-age-restrictions-and-id.md",
+        "calls": 8
+      },
+      "diagnosis": "weak_coverage",
+      "target": "04-delivery-mobile-and-willcall.md",
+      "suggested_action": "Rewrite or expand 04-delivery-mobile-and-willcall.md \u2014 it is what these calls retrieve, and they still fail. Use the callers' own words (see examples).",
+      "priority": 41.0,
+      "example_utterances": [
+        "What ID do I need for the late show?",
+        "How much is parking at the venue?",
+        "The app isn't working for me.",
+        "How do I book a wheelchair space?",
+        "Hi, I'm trying to work out where my tickets went."
+      ],
+      "majority_intent": "event_status",
+      "purity": 0.149
+    },
+    {
+      "cluster_id": 5,
+      "label": "came / came money / money came / money",
+      "keywords": [
+        "came",
+        "came money",
+        "money came",
+        "money"
+      ],
+      "n_calls": 10,
+      "share": 0.0333,
+      "failure_rate": 0.3,
+      "weak_retrieval_rate": 1.0,
+      "trouble_rate": 1.0,
+      "median_top_vec_score": 0.6484,
+      "handoff_reasons": {
+        "explicit_human_request": 1
+      },
+      "dominant_handoff_reason": "explicit_human_request",
+      "covering_docs": [
+        {
+          "doc": "02-ticket-transfers.md",
+          "count": 10
+        }
+      ],
+      "held_out_match": null,
+      "diagnosis": "weak_coverage",
+      "target": "02-ticket-transfers.md",
+      "suggested_action": "Rewrite or expand 02-ticket-transfers.md \u2014 it is what these calls retrieve, and they still fail. Use the callers' own words (see examples).",
+      "priority": 10.0,
+      "example_utterances": [
+        "Something came up and I can't go. Do I get my money back?"
+      ],
+      "majority_intent": "refund_request",
+      "purity": 1.0
+    },
+    {
+      "cluster_id": 12,
+      "label": "friend needs / needs tickets / needs / friend",
+      "keywords": [
+        "friend needs",
+        "needs tickets",
+        "needs",
+        "friend"
+      ],
+      "n_calls": 11,
+      "share": 0.0367,
+      "failure_rate": 0.5455,
+      "weak_retrieval_rate": 0.6364,
+      "trouble_rate": 0.7273,
+      "median_top_vec_score": 0.6696,
+      "handoff_reasons": {
+        "retrieval_insufficient": 4
+      },
+      "dominant_handoff_reason": "retrieval_insufficient",
+      "covering_docs": [
+        {
+          "doc": "02-ticket-transfers.md",
+          "count": 11
+        }
+      ],
+      "held_out_match": null,
+      "diagnosis": "weak_coverage",
+      "target": "02-ticket-transfers.md",
+      "suggested_action": "Rewrite or expand 02-ticket-transfers.md \u2014 it is what these calls retrieve, and they still fail. Use the callers' own words (see examples).",
+      "priority": 8.0,
+      "example_utterances": [
+        "My friend needs some of my tickets."
+      ],
+      "majority_intent": "ticket_transfer",
+      "purity": 1.0
+    },
+    {
+      "cluster_id": 3,
+      "label": "need know / know / know venue / venue",
+      "keywords": [
+        "need know",
+        "know",
+        "know venue",
+        "venue"
+      ],
+      "n_calls": 8,
+      "share": 0.0267,
+      "failure_rate": 0.5,
+      "weak_retrieval_rate": 1.0,
+      "trouble_rate": 1.0,
+      "median_top_vec_score": 0.6466,
+      "handoff_reasons": {
+        "retrieval_insufficient": 4
+      },
+      "dominant_handoff_reason": "retrieval_insufficient",
+      "covering_docs": [
+        {
+          "doc": "04-delivery-mobile-and-willcall.md",
+          "count": 8
+        }
+      ],
+      "held_out_match": null,
+      "diagnosis": "weak_coverage",
+      "target": "04-delivery-mobile-and-willcall.md",
+      "suggested_action": "Rewrite or expand 04-delivery-mobile-and-willcall.md \u2014 it is what these calls retrieve, and they still fail. Use the callers' own words (see examples).",
+      "priority": 6.4,
+      "example_utterances": [
+        "What do I need to know before I get to the venue?"
+      ],
+      "majority_intent": "venue_logistics",
+      "purity": 1.0
+    },
+    {
+      "cluster_id": 4,
+      "label": "getting money / getting / money getting / money",
+      "keywords": [
+        "getting money",
+        "getting",
+        "money getting",
+        "money"
+      ],
+      "n_calls": 8,
+      "share": 0.0267,
+      "failure_rate": 1.0,
+      "weak_retrieval_rate": 1.0,
+      "trouble_rate": 1.0,
+      "median_top_vec_score": 0.5918,
+      "handoff_reasons": {
+        "retrieval_very_weak": 8
+      },
+      "dominant_handoff_reason": "retrieval_very_weak",
+      "covering_docs": [
+        {
+          "doc": "01-refunds-and-exchanges.md",
+          "count": 8
+        }
+      ],
+      "held_out_match": null,
+      "diagnosis": "weak_coverage",
+      "target": "01-refunds-and-exchanges.md",
+      "suggested_action": "Rewrite or expand 01-refunds-and-exchanges.md \u2014 it is what these calls retrieve, and they still fail. Use the callers' own words (see examples).",
+      "priority": 6.4,
+      "example_utterances": [
+        "It's about getting money back."
+      ],
+      "majority_intent": "refund_request",
+      "purity": 1.0
+    },
+    {
+      "cluster_id": 7,
+      "label": "cancelled / amphitheatre cancelled / weather / bad weather",
+      "keywords": [
+        "cancelled",
+        "amphitheatre cancelled",
+        "weather",
+        "bad weather"
+      ],
+      "n_calls": 8,
+      "share": 0.0267,
+      "failure_rate": 0.75,
+      "weak_retrieval_rate": 1.0,
+      "trouble_rate": 1.0,
+      "median_top_vec_score": 0.5842,
+      "handoff_reasons": {
+        "retrieval_very_weak": 6
+      },
+      "dominant_handoff_reason": "retrieval_very_weak",
+      "covering_docs": [
+        {
+          "doc": "06-venue-parking.md",
+          "count": 6
+        },
+        {
+          "doc": "01-refunds-and-exchanges.md",
+          "count": 2
+        }
+      ],
+      "held_out_match": {
+        "doc": "11-weather-and-outdoor-events.md",
+        "calls": 8
+      },
+      "diagnosis": "held_out_coverage",
+      "target": "11-weather-and-outdoor-events.md",
+      "suggested_action": "Ingest 11-weather-and-outdoor-events.md: it exists, answers these questions better than anything indexed, and is not in the knowledge base.",
+      "priority": 6.4,
+      "example_utterances": [
+        "Hi there, I bought tickets a while ago and I've got a question. Is the amphitheatre show cancelled for bad weather?",
+        "Is the amphitheatre show cancelled for bad weather?"
+      ],
+      "majority_intent": "weather_outdoor",
+      "purity": 1.0
+    },
+    {
+      "cluster_id": 6,
+      "label": "does / rains / outdoor ahead / ahead",
+      "keywords": [
+        "does",
+        "rains",
+        "outdoor ahead",
+        "ahead"
+      ],
+      "n_calls": 7,
+      "share": 0.0233,
+      "failure_rate": 0.8571,
+      "weak_retrieval_rate": 1.0,
+      "trouble_rate": 1.0,
+      "median_top_vec_score": 0.5727,
+      "handoff_reasons": {
+        "retrieval_very_weak": 5
+      },
+      "dominant_handoff_reason": "retrieval_very_weak",
+      "covering_docs": [
+        {
+          "doc": "06-venue-parking.md",
+          "count": 5
+        },
+        {
+          "doc": "04-delivery-mobile-and-willcall.md",
+          "count": 2
+        }
+      ],
+      "held_out_match": {
+        "doc": "11-weather-and-outdoor-events.md",
+        "calls": 7
+      },
+      "diagnosis": "held_out_coverage",
+      "target": "11-weather-and-outdoor-events.md",
+      "suggested_action": "Ingest 11-weather-and-outdoor-events.md: it exists, answers these questions better than anything indexed, and is not in the knowledge base.",
+      "priority": 4.9,
+      "example_utterances": [
+        "Does the outdoor show go ahead if it rains?",
+        "Hi there, I bought tickets a while ago and I've got a question. Does the outdoor show go ahead if it rains?"
+      ],
+      "majority_intent": "weather_outdoor",
+      "purity": 1.0
+    },
+    {
+      "cluster_id": 0,
+      "label": "bit special / special big / make bit / make",
+      "keywords": [
+        "bit special",
+        "special big",
+        "make bit",
+        "make"
+      ],
+      "n_calls": 6,
+      "share": 0.02,
+      "failure_rate": 1.0,
+      "weak_retrieval_rate": 1.0,
+      "trouble_rate": 1.0,
+      "median_top_vec_score": 0.4827,
+      "handoff_reasons": {
+        "retrieval_very_weak": 6
+      },
+      "dominant_handoff_reason": "retrieval_very_weak",
+      "covering_docs": [
+        {
+          "doc": "05-venue-bag-policy.md",
+          "count": 6
+        }
+      ],
+      "held_out_match": null,
+      "diagnosis": "weak_coverage",
+      "target": "05-venue-bag-policy.md",
+      "suggested_action": "Rewrite or expand 05-venue-bag-policy.md \u2014 it is what these calls retrieve, and they still fail. Use the callers' own words (see examples).",
+      "priority": 3.6,
+      "example_utterances": [
+        "We want to make it a bit special for a big group."
+      ],
+      "majority_intent": "group_booking_vip",
+      "purity": 1.0
+    },
+    {
+      "cluster_id": 1,
+      "label": "um / um order / hi um / order hi",
+      "keywords": [
+        "um",
+        "um order",
+        "hi um",
+        "order hi"
+      ],
+      "n_calls": 6,
+      "share": 0.02,
+      "failure_rate": 1.0,
+      "weak_retrieval_rate": 1.0,
+      "trouble_rate": 1.0,
+      "median_top_vec_score": 0.5125,
+      "handoff_reasons": {
+        "retrieval_very_weak": 6
+      },
+      "dominant_handoff_reason": "retrieval_very_weak",
+      "covering_docs": [
+        {
+          "doc": "08-payment-and-billing.md",
+          "count": 6
+        }
+      ],
+      "held_out_match": null,
+      "diagnosis": "weak_coverage",
+      "target": "08-payment-and-billing.md",
+      "suggested_action": "Rewrite or expand 08-payment-and-billing.md \u2014 it is what these calls retrieve, and they still fail. Use the callers' own words (see examples).",
+      "priority": 3.6,
+      "example_utterances": [
+        "Hi, um, it's about my order."
+      ],
+      "majority_intent": "where_are_my_tickets",
+      "purity": 1.0
+    },
+    {
+      "cluster_id": 8,
+      "label": "group / discount / fourteen group / group discount",
+      "keywords": [
+        "group",
+        "discount",
+        "fourteen group",
+        "group discount"
+      ],
+      "n_calls": 6,
+      "share": 0.02,
+      "failure_rate": 0.8333,
+      "weak_retrieval_rate": 1.0,
+      "trouble_rate": 1.0,
+      "median_top_vec_score": 0.5665,
+      "handoff_reasons": {
+        "retrieval_very_weak": 5
+      },
+      "dominant_handoff_reason": "retrieval_very_weak",
+      "covering_docs": [
+        {
+          "doc": "07-accessibility.md",
+          "count": 4
+        },
+        {
+          "doc": "04-delivery-mobile-and-willcall.md",
+          "count": 2
+        }
+      ],
+      "held_out_match": {
+        "doc": "10-group-and-vip-packages.md",
+        "calls": 6
+      },
+      "diagnosis": "held_out_coverage",
+      "target": "10-group-and-vip-packages.md",
+      "suggested_action": "Ingest 10-group-and-vip-packages.md: it exists, answers these questions better than anything indexed, and is not in the knowledge base.",
+      "priority": 3.6,
+      "example_utterances": [
+        "Hi there, I bought tickets a while ago and I've got a question. We're a group of fourteen. Is there a group discount?",
+        "We're a group of fourteen. Is there a group discount?"
+      ],
+      "majority_intent": "group_booking_vip",
+      "purity": 1.0
+    },
+    {
+      "cluster_id": 15,
+      "label": "money tickets / like money / like / tickets like",
+      "keywords": [
+        "money tickets",
+        "like money",
+        "like",
+        "tickets like"
+      ],
+      "n_calls": 6,
+      "share": 0.02,
+      "failure_rate": 0.0,
+      "weak_retrieval_rate": 0.8333,
+      "trouble_rate": 0.8333,
+      "median_top_vec_score": 0.6671,
+      "handoff_reasons": {},
+      "dominant_handoff_reason": null,
+      "covering_docs": [
+        {
+          "doc": "09-resale-and-face-value.md",
+          "count": 6
+        }
+      ],
+      "held_out_match": null,
+      "diagnosis": "weak_coverage",
+      "target": "09-resale-and-face-value.md",
+      "suggested_action": "Rewrite or expand 09-resale-and-face-value.md \u2014 it is what these calls retrieve, and they still fail. Use the callers' own words (see examples).",
+      "priority": 3.0,
+      "example_utterances": [
+        "I'd like my money back for my tickets.",
+        "Hi there, I bought tickets a while ago and I've got a question. I'd like my money back for my tickets."
+      ],
+      "majority_intent": "refund_request",
+      "purity": 1.0
+    },
+    {
+      "cluster_id": 2,
+      "label": "bring / size bag / size / bag bring",
+      "keywords": [
+        "bring",
+        "size bag",
+        "size",
+        "bag bring"
+      ],
+      "n_calls": 8,
+      "share": 0.0267,
+      "failure_rate": 0.0,
+      "weak_retrieval_rate": 0.375,
+      "trouble_rate": 0.375,
+      "median_top_vec_score": 0.7479,
+      "handoff_reasons": {},
+      "dominant_handoff_reason": null,
+      "covering_docs": [
+        {
+          "doc": "05-venue-bag-policy.md",
+          "count": 5
+        },
+        {
+          "doc": "07-accessibility.md",
+          "count": 3
+        }
+      ],
+      "held_out_match": null,
+      "diagnosis": "weak_coverage",
+      "target": "05-venue-bag-policy.md",
+      "suggested_action": "Rewrite or expand 05-venue-bag-policy.md \u2014 it is what these calls retrieve, and they still fail. Use the callers' own words (see examples).",
+      "priority": 2.4,
+      "example_utterances": [
+        "I have some accessibility needs for the show.",
+        "Can I bring my service dog?",
+        "What size bag can I bring in?",
+        "Can I bring a backpack to the show?"
+      ],
+      "majority_intent": "venue_logistics",
+      "purity": 0.625
+    },
+    {
+      "cluster_id": 20,
+      "label": "friend / friend example / example com / tickets friend",
+      "keywords": [
+        "friend",
+        "friend example",
+        "example com",
+        "tickets friend"
+      ],
+      "n_calls": 9,
+      "share": 0.03,
+      "failure_rate": 0.1111,
+      "weak_retrieval_rate": 0.0,
+      "trouble_rate": 0.1111,
+      "median_top_vec_score": 0.6872,
+      "handoff_reasons": {},
+      "dominant_handoff_reason": null,
+      "covering_docs": [
+        {
+          "doc": "02-ticket-transfers.md",
+          "count": 9
+        }
+      ],
+      "held_out_match": null,
+      "diagnosis": "healthy",
+      "target": null,
+      "suggested_action": "No action.",
+      "priority": 0.9,
+      "example_utterances": [
+        "I want to send two tickets to my friend at friend@example.com.",
+        "I need to give two tickets to my friend, the email is friend@example.com."
+      ],
+      "majority_intent": "ticket_transfer",
+      "purity": 1.0
+    },
+    {
+      "cluster_id": 9,
+      "label": "resell tickets / resell / tickets resell / paid resell",
+      "keywords": [
+        "resell tickets",
+        "resell",
+        "tickets resell",
+        "paid resell"
+      ],
+      "n_calls": 9,
+      "share": 0.03,
+      "failure_rate": 0.0,
+      "weak_retrieval_rate": 0.0,
+      "trouble_rate": 0.0,
+      "median_top_vec_score": 0.7844,
+      "handoff_reasons": {},
+      "dominant_handoff_reason": null,
+      "covering_docs": [
+        {
+          "doc": "09-resale-and-face-value.md",
+          "count": 9
+        }
+      ],
+      "held_out_match": null,
+      "diagnosis": "healthy",
+      "target": null,
+      "suggested_action": "No action.",
+      "priority": 0.0,
+      "example_utterances": [
+        "Can I resell my tickets?",
+        "Can I sell my tickets for more than I paid?"
+      ],
+      "majority_intent": "resale_question",
+      "purity": 1.0
+    },
+    {
+      "cluster_id": 10,
+      "label": "apple / apple pay / pay / pay apple",
+      "keywords": [
+        "apple",
+        "apple pay",
+        "pay",
+        "pay apple"
+      ],
+      "n_calls": 6,
+      "share": 0.02,
+      "failure_rate": 0.0,
+      "weak_retrieval_rate": 0.0,
+      "trouble_rate": 0.0,
+      "median_top_vec_score": 0.7222,
+      "handoff_reasons": {},
+      "dominant_handoff_reason": null,
+      "covering_docs": [
+        {
+          "doc": "08-payment-and-billing.md",
+          "count": 6
+        }
+      ],
+      "held_out_match": null,
+      "diagnosis": "healthy",
+      "target": null,
+      "suggested_action": "No action.",
+      "priority": 0.0,
+      "example_utterances": [
+        "Do you take Apple Pay?",
+        "Hi there, I bought tickets a while ago and I've got a question. Do you take Apple Pay?"
+      ],
+      "majority_intent": "payment_question",
+      "purity": 1.0
+    },
+    {
+      "cluster_id": 11,
+      "label": "tickets tickets / tickets / work tickets / event",
+      "keywords": [
+        "tickets tickets",
+        "tickets",
+        "work tickets",
+        "event"
+      ],
+      "n_calls": 6,
+      "share": 0.02,
+      "failure_rate": 0.0,
+      "weak_retrieval_rate": 0.0,
+      "trouble_rate": 0.0,
+      "median_top_vec_score": 0.6741,
+      "handoff_reasons": {},
+      "dominant_handoff_reason": null,
+      "covering_docs": [
+        {
+          "doc": "04-delivery-mobile-and-willcall.md",
+          "count": 6
+        }
+      ],
+      "held_out_match": null,
+      "diagnosis": "healthy",
+      "target": null,
+      "suggested_action": "No action.",
+      "priority": 0.0,
+      "example_utterances": [
+        "Where are my tickets?",
+        "I can't find my tickets anywhere."
+      ],
+      "majority_intent": "where_are_my_tickets",
+      "purity": 1.0
+    },
+    {
+      "cluster_id": 13,
+      "label": "policy / refund policy / refund / policy refund",
+      "keywords": [
+        "policy",
+        "refund policy",
+        "refund",
+        "policy refund"
+      ],
+      "n_calls": 9,
+      "share": 0.03,
+      "failure_rate": 0.0,
+      "weak_retrieval_rate": 0.0,
+      "trouble_rate": 0.0,
+      "median_top_vec_score": 0.6998,
+      "handoff_reasons": {},
+      "dominant_handoff_reason": null,
+      "covering_docs": [
+        {
+          "doc": "01-refunds-and-exchanges.md",
+          "count": 9
+        }
+      ],
+      "held_out_match": null,
+      "diagnosis": "healthy",
+      "target": null,
+      "suggested_action": "No action.",
+      "priority": 0.0,
+      "example_utterances": [
+        "What's your refund policy?"
+      ],
+      "majority_intent": "refund_request",
+      "purity": 1.0
+    },
+    {
+      "cluster_id": 14,
+      "label": "got tell / seats / seats ve / tell seats",
+      "keywords": [
+        "got tell",
+        "seats",
+        "seats ve",
+        "tell seats"
+      ],
+      "n_calls": 6,
+      "share": 0.02,
+      "failure_rate": 0.0,
+      "weak_retrieval_rate": 0.0,
+      "trouble_rate": 0.0,
+      "median_top_vec_score": 0.73,
+      "handoff_reasons": {},
+      "dominant_handoff_reason": null,
+      "covering_docs": [
+        {
+          "doc": "07-accessibility.md",
+          "count": 6
+        }
+      ],
+      "held_out_match": null,
+      "diagnosis": "healthy",
+      "target": null,
+      "suggested_action": "No action.",
+      "priority": 0.0,
+      "example_utterances": [
+        "Can you tell me which seats I've got?"
+      ],
+      "majority_intent": "where_are_my_tickets",
+      "purity": 1.0
+    },
+    {
+      "cluster_id": 16,
+      "label": "app / aren / showing / aren showing",
+      "keywords": [
+        "app",
+        "aren",
+        "showing",
+        "aren showing"
+      ],
+      "n_calls": 17,
+      "share": 0.0567,
+      "failure_rate": 0.0,
+      "weak_retrieval_rate": 0.0,
+      "trouble_rate": 0.0,
+      "median_top_vec_score": 0.8496,
+      "handoff_reasons": {},
+      "dominant_handoff_reason": null,
+      "covering_docs": [
+        {
+          "doc": "04-delivery-mobile-and-willcall.md",
+          "count": 17
+        }
+      ],
+      "held_out_match": null,
+      "diagnosis": "healthy",
+      "target": null,
+      "suggested_action": "No action.",
+      "priority": 0.0,
+      "example_utterances": [
+        "My tickets aren't showing up in the app.",
+        "When will my tickets actually show up?",
+        "The app says I have an order but there are no tickets in it.",
+        "Hi there, I bought tickets a while ago and I've got a question. When will my tickets actually show up?",
+        "Hi there, I bought tickets a while ago and I've got a question. The app says I have an order but there are no tickets in it."
+      ],
+      "majority_intent": "delivery_problem",
+      "purity": 1.0
+    },
+    {
+      "cluster_id": 17,
+      "label": "paid tickets / paid / tickets sell / sell",
+      "keywords": [
+        "paid tickets",
+        "paid",
+        "tickets sell",
+        "sell"
+      ],
+      "n_calls": 6,
+      "share": 0.02,
+      "failure_rate": 0.0,
+      "weak_retrieval_rate": 0.0,
+      "trouble_rate": 0.0,
+      "median_top_vec_score": 0.7838,
+      "handoff_reasons": {},
+      "dominant_handoff_reason": null,
+      "covering_docs": [
+        {
+          "doc": "09-resale-and-face-value.md",
+          "count": 6
+        }
+      ],
+      "held_out_match": null,
+      "diagnosis": "healthy",
+      "target": null,
+      "suggested_action": "No action.",
+      "priority": 0.0,
+      "example_utterances": [
+        "When do I get paid if my tickets sell?",
+        "Hi there, I bought tickets a while ago and I've got a question. When do I get paid if my tickets sell?"
+      ],
+      "majority_intent": "resale_question",
+      "purity": 1.0
+    },
+    {
+      "cluster_id": 18,
+      "label": "happening order / happening / com happening / plus tickets",
+      "keywords": [
+        "happening order",
+        "happening",
+        "com happening",
+        "plus tickets"
+      ],
+      "n_calls": 9,
+      "share": 0.03,
+      "failure_rate": 0.0,
+      "weak_retrieval_rate": 0.0,
+      "trouble_rate": 0.0,
+      "median_top_vec_score": 0.7028,
+      "handoff_reasons": {},
+      "dominant_handoff_reason": null,
+      "covering_docs": [
+        {
+          "doc": "04-delivery-mobile-and-willcall.md",
+          "count": 9
+        }
+      ],
+      "held_out_match": null,
+      "diagnosis": "healthy",
+      "target": null,
+      "suggested_action": "No action.",
+      "priority": 0.0,
+      "example_utterances": [
+        "Is my show still happening? It's order T K 5 1 9 0 0, lee plus tickets at example dot com.",
+        "Hi there, I bought tickets a while ago and I've got a question. Is my show still happening? It's order T K 5 1 9 0 0, lee plus tickets at example dot com."
+      ],
+      "majority_intent": "event_status",
+      "purity": 1.0
+    },
+    {
+      "cluster_id": 19,
+      "label": "event order / check event / event / plus",
+      "keywords": [
+        "event order",
+        "check event",
+        "event",
+        "plus"
+      ],
+      "n_calls": 6,
+      "share": 0.02,
+      "failure_rate": 0.0,
+      "weak_retrieval_rate": 0.0,
+      "trouble_rate": 0.0,
+      "median_top_vec_score": 0.733,
+      "handoff_reasons": {},
+      "dominant_handoff_reason": null,
+      "covering_docs": [
+        {
+          "doc": "04-delivery-mobile-and-willcall.md",
+          "count": 6
+        }
+      ],
+      "held_out_match": null,
+      "diagnosis": "healthy",
+      "target": null,
+      "suggested_action": "No action.",
+      "priority": 0.0,
+      "example_utterances": [
+        "Can you check if my event is still on? It's order T K 5 1 9 0 0, lee plus tickets at example dot com.",
+        "Hi there, I bought tickets a while ago and I've got a question. Can you check if my event is still on? It's order T K 5 1 9 0 0, lee plus tickets at example dot com."
+      ],
+      "majority_intent": "event_status",
+      "purity": 1.0
+    },
+    {
+      "cluster_id": 21,
+      "label": "saturday order / need check / saturday / check tickets",
+      "keywords": [
+        "saturday order",
+        "need check",
+        "saturday",
+        "check tickets"
+      ],
+      "n_calls": 11,
+      "share": 0.0367,
+      "failure_rate": 0.0,
+      "weak_retrieval_rate": 0.0,
+      "trouble_rate": 0.0,
+      "median_top_vec_score": 0.6653,
+      "handoff_reasons": {},
+      "dominant_handoff_reason": null,
+      "covering_docs": [
+        {
+          "doc": "04-delivery-mobile-and-willcall.md",
+          "count": 11
+        }
+      ],
+      "held_out_match": null,
+      "diagnosis": "healthy",
+      "target": null,
+      "suggested_action": "No action.",
+      "priority": 0.0,
+      "example_utterances": [
+        "I need to check my tickets for Saturday. It's order T K 8 8 2 1 3, sam at example dot com.",
+        "Hi there, I bought tickets a while ago and I've got a question. I need to check my tickets for Saturday. It's order T K 8 8 2 1 3, sam at example dot com."
+      ],
+      "majority_intent": "where_are_my_tickets",
+      "purity": 1.0
+    },
+    {
+      "cluster_id": 22,
+      "label": "tickets order / com tickets / sam example / order sam",
+      "keywords": [
+        "tickets order",
+        "com tickets",
+        "sam example",
+        "order sam"
+      ],
+      "n_calls": 13,
+      "share": 0.0433,
+      "failure_rate": 0.0,
+      "weak_retrieval_rate": 0.0,
+      "trouble_rate": 0.0,
+      "median_top_vec_score": 0.697,
+      "handoff_reasons": {},
+      "dominant_handoff_reason": null,
+      "covering_docs": [
+        {
+          "doc": "04-delivery-mobile-and-willcall.md",
+          "count": 9
+        },
+        {
+          "doc": "07-accessibility.md",
+          "count": 2
+        },
+        {
+          "doc": "02-ticket-transfers.md",
+          "count": 2
+        }
+      ],
+      "held_out_match": null,
+      "diagnosis": "healthy",
+      "target": null,
+      "suggested_action": "No action.",
+      "priority": 0.0,
+      "example_utterances": [
+        "Where are my tickets? It's order T K 8 8 2 1 3, sam at example dot com.",
+        "Can you tell me which seats I've got? It's order T K 8 8 2 1 3, sam at example dot com.",
+        "Hi there, I bought tickets a while ago and I've got a question. Hi, I'm trying to work out where my tickets went. It's order T K 8 8 2 1 3, sam at example dot com.",
+        "I can't find my tickets anywhere. It's order T K 8 8 2 1 3, sam at example dot com.",
+        "Hi there, I bought tickets a while ago and I've got a question. Can you tell me which seats I've got? It's order T K 8 8 2 1 3, sam at example dot com."
+      ],
+      "majority_intent": "where_are_my_tickets",
+      "purity": 1.0
+    },
+    {
+      "cluster_id": 23,
+      "label": "friend / com order / friend example / example com",
+      "keywords": [
+        "friend",
+        "com order",
+        "friend example",
+        "example com"
+      ],
+      "n_calls": 7,
+      "share": 0.0233,
+      "failure_rate": 0.0,
+      "weak_retrieval_rate": 0.0,
+      "trouble_rate": 0.0,
+      "median_top_vec_score": 0.7167,
+      "handoff_reasons": {},
+      "dominant_handoff_reason": null,
+      "covering_docs": [
+        {
+          "doc": "02-ticket-transfers.md",
+          "count": 7
+        }
+      ],
+      "held_out_match": null,
+      "diagnosis": "healthy",
+      "target": null,
+      "suggested_action": "No action.",
+      "priority": 0.0,
+      "example_utterances": [
+        "I need to give two tickets to my friend, the email is friend@example.com. It's order T K 8 8 2 1 3, sam at example dot com.",
+        "I want to send two tickets to my friend at friend@example.com. It's order T K 8 8 2 1 3, sam at example dot com."
+      ],
+      "majority_intent": "ticket_transfer",
+      "purity": 1.0
+    },
+    {
+      "cluster_id": 24,
+      "label": "transfer tickets / transfer / com transfer / com order",
+      "keywords": [
+        "transfer tickets",
+        "transfer",
+        "com transfer",
+        "com order"
+      ],
+      "n_calls": 8,
+      "share": 0.0267,
+      "failure_rate": 0.0,
+      "weak_retrieval_rate": 0.0,
+      "trouble_rate": 0.0,
+      "median_top_vec_score": 0.764,
+      "handoff_reasons": {},
+      "dominant_handoff_reason": null,
+      "covering_docs": [
+        {
+          "doc": "02-ticket-transfers.md",
+          "count": 8
+        }
+      ],
+      "held_out_match": null,
+      "diagnosis": "healthy",
+      "target": null,
+      "suggested_action": "No action.",
+      "priority": 0.0,
+      "example_utterances": [
+        "Hi there, I bought tickets a while ago and I've got a question. Can you transfer two of my tickets to friend@example.com? It's order T K 8 8 2 1 3, sam at example dot com.",
+        "Can you transfer two of my tickets to friend@example.com? It's order T K 8 8 2 1 3, sam at example dot com."
+      ],
+      "majority_intent": "ticket_transfer",
+      "purity": 1.0
+    }
+  ],
+  "actions": [
+    {
+      "diagnosis": "weak_coverage",
+      "target": "02-ticket-transfers.md",
+      "action": "Rewrite or expand 02-ticket-transfers.md \u2014 it is what these calls retrieve, and they still fail. Use the callers' own words (see examples).",
+      "troubled_calls": 20,
+      "share_of_calls": 0.0667,
+      "priority": 20.0,
+      "cluster_ids": [
+        -1,
+        5,
+        12,
+        20
+      ],
+      "cluster_id": 5,
+      "example_utterances": [
+        "Something came up and I can't go. Do I get my money back?",
+        "My friend needs some of my tickets.",
+        "I need to give two tickets to my friend, the email is friend@example.com.",
+        "I want to get rid of my tickets somehow."
+      ],
+      "rank": 1,
+      "majority_intent": "refund_request"
+    },
+    {
+      "diagnosis": "held_out_coverage",
+      "target": "11-weather-and-outdoor-events.md",
+      "action": "Ingest 11-weather-and-outdoor-events.md: it exists, answers these questions better than anything indexed, and is not in the knowledge base.",
+      "troubled_calls": 19,
+      "share_of_calls": 0.0633,
+      "priority": 19.0,
+      "cluster_ids": [
+        -1,
+        6,
+        7
+      ],
+      "cluster_id": 7,
+      "example_utterances": [
+        "What happens if there's lightning during the concert?",
+        "Hi there, I bought tickets a while ago and I've got a question. Is the amphitheatre show cancelled for bad weather?",
+        "Does the outdoor show go ahead if it rains?",
+        "Hi there, I bought tickets a while ago and I've got a question. Does the outdoor show go ahead if it rains?",
+        "Is the amphitheatre show cancelled for bad weather?"
+      ],
+      "rank": 2,
+      "majority_intent": "weather_outdoor"
+    },
+    {
+      "diagnosis": "weak_coverage",
+      "target": "04-delivery-mobile-and-willcall.md",
+      "action": "Rewrite or expand 04-delivery-mobile-and-willcall.md \u2014 it is what these calls retrieve, and they still fail. Use the callers' own words (see examples).",
+      "troubled_calls": 18,
+      "share_of_calls": 0.06,
+      "priority": 18.0,
+      "cluster_ids": [
+        -1,
+        3
+      ],
+      "cluster_id": -1,
+      "example_utterances": [
+        "The app isn't working for me.",
+        "What do I need to know before I get to the venue?",
+        "I saw something about my show online.",
+        "Hi there, I bought tickets a while ago and I've got a question. Where do the Ubers pick up after the concert?"
+      ],
+      "rank": 3,
+      "majority_intent": "venue_logistics"
+    },
+    {
+      "diagnosis": "held_out_coverage",
+      "target": "10-group-and-vip-packages.md",
+      "action": "Ingest 10-group-and-vip-packages.md: it exists, answers these questions better than anything indexed, and is not in the knowledge base.",
+      "troubled_calls": 13,
+      "share_of_calls": 0.0433,
+      "priority": 13.0,
+      "cluster_ids": [
+        -1,
+        8
+      ],
+      "cluster_id": -1,
+      "example_utterances": [
+        "Hi there, I bought tickets a while ago and I've got a question. We're a group of fourteen. Is there a group discount?",
+        "How much is a hospitality suite?",
+        "We're a group of fourteen. Is there a group discount?",
+        "Can I upgrade my tickets to VIP?",
+        "What's included in the VIP package?"
+      ],
+      "rank": 4,
+      "majority_intent": "group_booking_vip"
+    },
+    {
+      "diagnosis": "weak_coverage",
+      "target": "08-payment-and-billing.md",
+      "action": "Rewrite or expand 08-payment-and-billing.md \u2014 it is what these calls retrieve, and they still fail. Use the callers' own words (see examples).",
+      "troubled_calls": 9,
+      "share_of_calls": 0.03,
+      "priority": 8.1,
+      "cluster_ids": [
+        -1,
+        1
+      ],
+      "cluster_id": 1,
+      "example_utterances": [
+        "Hi, um, it's about my order.",
+        "Something looks off with my payment.",
+        "I need to sort something out with my payment, I can't go anymore."
+      ],
+      "rank": 5,
+      "majority_intent": "where_are_my_tickets"
+    },
+    {
+      "diagnosis": "held_out_coverage",
+      "target": "12-age-restrictions-and-id.md",
+      "action": "Ingest 12-age-restrictions-and-id.md: it exists, answers these questions better than anything indexed, and is not in the knowledge base.",
+      "troubled_calls": 8,
+      "share_of_calls": 0.0267,
+      "priority": 6.4,
+      "cluster_ids": [
+        -1
+      ],
+      "cluster_id": -1,
+      "example_utterances": [
+        "What ID do I need for the late show?",
+        "Hi there, I bought tickets a while ago and I've got a question. Can my sixteen year old come in with me?",
+        "Hi there, I bought tickets a while ago and I've got a question. Is the club night eighteen plus?"
+      ],
+      "rank": 6,
+      "majority_intent": "age_restriction_id"
+    },
+    {
+      "diagnosis": "weak_coverage",
+      "target": "01-refunds-and-exchanges.md",
+      "action": "Rewrite or expand 01-refunds-and-exchanges.md \u2014 it is what these calls retrieve, and they still fail. Use the callers' own words (see examples).",
+      "troubled_calls": 8,
+      "share_of_calls": 0.0267,
+      "priority": 6.4,
+      "cluster_ids": [
+        4
+      ],
+      "cluster_id": 4,
+      "example_utterances": [
+        "It's about getting money back."
+      ],
+      "rank": 7,
+      "majority_intent": "refund_request"
+    },
+    {
+      "diagnosis": "weak_coverage",
+      "target": "05-venue-bag-policy.md",
+      "action": "Rewrite or expand 05-venue-bag-policy.md \u2014 it is what these calls retrieve, and they still fail. Use the callers' own words (see examples).",
+      "troubled_calls": 8,
+      "share_of_calls": 0.0267,
+      "priority": 6.4,
+      "cluster_ids": [
+        0,
+        2
+      ],
+      "cluster_id": 0,
+      "example_utterances": [
+        "We want to make it a bit special for a big group.",
+        "Can I bring a backpack to the show?"
+      ],
+      "rank": 8,
+      "majority_intent": "group_booking_vip"
+    },
+    {
+      "diagnosis": "weak_coverage",
+      "target": "06-venue-parking.md",
+      "action": "Rewrite or expand 06-venue-parking.md \u2014 it is what these calls retrieve, and they still fail. Use the callers' own words (see examples).",
+      "troubled_calls": 5,
+      "share_of_calls": 0.0167,
+      "priority": 2.5,
+      "cluster_ids": [
+        -1
+      ],
+      "cluster_id": -1,
+      "example_utterances": [
+        "Is the club night eighteen plus?",
+        "Where do the Ubers pick up after the concert?",
+        "I'm a bit lost with my booking."
+      ],
+      "rank": 9,
+      "majority_intent": "venue_logistics"
+    },
+    {
+      "diagnosis": "weak_coverage",
+      "target": "09-resale-and-face-value.md",
+      "action": "Rewrite or expand 09-resale-and-face-value.md \u2014 it is what these calls retrieve, and they still fail. Use the callers' own words (see examples).",
+      "troubled_calls": 5,
+      "share_of_calls": 0.0167,
+      "priority": 2.5,
+      "cluster_ids": [
+        15
+      ],
+      "cluster_id": 15,
+      "example_utterances": [
+        "I'd like my money back for my tickets."
+      ],
+      "rank": 10,
+      "majority_intent": "refund_request"
+    },
+    {
+      "diagnosis": "weak_coverage",
+      "target": "07-accessibility.md",
+      "action": "Rewrite or expand 07-accessibility.md \u2014 it is what these calls retrieve, and they still fail. Use the callers' own words (see examples).",
+      "troubled_calls": 2,
+      "share_of_calls": 0.0067,
+      "priority": 0.4,
+      "cluster_ids": [
+        -1,
+        2
+      ],
+      "cluster_id": 2,
+      "example_utterances": [
+        "I have some accessibility needs for the show.",
+        "Is it okay to bring my teenager?"
+      ],
+      "rank": 11,
+      "majority_intent": "accessibility"
+    },
+    {
+      "diagnosis": "weak_coverage",
+      "target": "03-event-cancellation-postponement.md",
+      "action": "Rewrite or expand 03-event-cancellation-postponement.md \u2014 it is what these calls retrieve, and they still fail. Use the callers' own words (see examples).",
+      "troubled_calls": 2,
+      "share_of_calls": 0.0067,
+      "priority": 0.4,
+      "cluster_ids": [
+        -1
+      ],
+      "cluster_id": -1,
+      "example_utterances": [
+        "I'm worried about the forecast for Friday.",
+        "I heard the summer opener might be cancelled. Is it still on?"
+      ],
+      "rank": 12,
+      "majority_intent": "weather_outdoor"
+    }
+  ],
+  "threshold_top_vec_score": 0.688,
+  "window_start": "2026-10-15T15:53:33.363386+00:00",
+  "window_end": "2026-10-15T15:54:05.430638+00:00",
+  "accuracy": {
+    "planted_gaps": [
+      "age_restriction_id",
+      "group_booking_vip",
+      "weather_outdoor"
+    ],
+    "rank_of_each_planted_gap": {
+      "age_restriction_id": 6,
+      "group_booking_vip": 4,
+      "weather_outdoor": 2
+    },
+    "planted_gaps_in_top3": 1,
+    "false_positives_in_top3": [],
+    "mean_cluster_purity": 0.985,
+    "hidden_resolved_rate_by_intent": {
+      "accessibility": 1.0,
+      "age_restriction_id": 0.0,
+      "delivery_problem": 0.783,
+      "event_status": 0.793,
+      "group_booking_vip": 0.0,
+      "payment_question": 0.8,
+      "refund_request": 0.477,
+      "resale_question": 1.0,
+      "ticket_transfer": 0.825,
+      "venue_logistics": 0.636,
+      "weather_outdoor": 0.0,
+      "where_are_my_tickets": 0.86
+    },
+    "note": "scored with the simulator's hidden labels, AFTER the report was built"
+  }
+}

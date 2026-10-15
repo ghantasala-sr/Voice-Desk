@@ -120,6 +120,13 @@ _NOT_ENTITIES = {
     "okay", "ok", "thanks", "thank", "let", "let's", "please", "one", "and", "but",
     "so", "or", "for", "to", "in", "on", "at", "of", "after", "before", "when",
     "once", "then", "also", "just", "unfortunately", "great", "good", "of course",
+    # Sentence-opening function words. Without these "Could I get your order
+    # number?" reads as the proper noun "Could I" and fails the checker — found
+    # by the week-4 offline agent, missed by every week-3 known-good answer.
+    "could", "would", "can", "will", "should", "may", "might", "must", "do", "does",
+    "did", "is", "are", "was", "were", "have", "has", "had", "what", "which", "who",
+    "how", "where", "why", "here", "absolutely", "certainly", "done", "no problem",
+    "welcome", "happy", "glad", "me", "my", "mine", "yours", "their", "its",
     "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
     *_MONTHS,
 }
@@ -438,8 +445,12 @@ class Checker:
             if lowered in self._lexicon.entities:
                 spans.append(Span("proper_noun", run, lowered, True, "lexicon"))
                 continue
+            # Strip non-entity words from BOTH ends: "Could I" is two function
+            # words, not a name.
             while words and words[0].lower().strip("'\u2019") in _NOT_ENTITIES:
                 words = words[1:]
+            while words and words[-1].lower().strip("'\u2019") in _NOT_ENTITIES:
+                words = words[:-1]
             if not words:
                 continue
             if len(words) == 1:

@@ -1,0 +1,171 @@
+{
+  "run": "2026-10-15-retrieval-calibration",
+  "n_covered": 36,
+  "n_uncovered": 28,
+  "target_recall_on_uncovered": 0.9,
+  "accuracy": {
+    "top1_document": {
+      "value": 0.7857,
+      "n": 14,
+      "successes": 11,
+      "ci95": [
+        0.5241,
+        0.9243
+      ]
+    },
+    "topk_document": {
+      "value": 1.0,
+      "n": 14,
+      "successes": 14,
+      "ci95": [
+        0.7847,
+        1.0
+      ]
+    }
+  },
+  "signals": {
+    "top_vec_score": {
+      "auc": 0.9335,
+      "covered_median": 0.73103,
+      "uncovered_median": 0.56475,
+      "operating_point": {
+        "threshold": 0.6879,
+        "recall_uncovered": {
+          "value": 0.9286,
+          "n": 28,
+          "successes": 26,
+          "ci95": [
+            0.7735,
+            0.9802
+          ]
+        },
+        "false_alarm_covered": {
+          "value": 0.3333,
+          "n": 36,
+          "successes": 12,
+          "ci95": [
+            0.2021,
+            0.4967
+          ]
+        }
+      }
+    },
+    "top_lex_score": {
+      "auc": 0.8214,
+      "covered_median": 0.6,
+      "uncovered_median": 0.2,
+      "operating_point": {
+        "threshold": 0.7,
+        "recall_uncovered": {
+          "value": 0.9286,
+          "n": 28,
+          "successes": 26,
+          "ci95": [
+            0.7735,
+            0.9802
+          ]
+        },
+        "false_alarm_covered": {
+          "value": 0.5833,
+          "n": 36,
+          "successes": 21,
+          "ci95": [
+            0.422,
+            0.7286
+          ]
+        }
+      }
+    },
+    "vec_margin": {
+      "auc": 0.8095,
+      "covered_median": 0.05533,
+      "uncovered_median": 0.01522,
+      "operating_point": {
+        "threshold": 0.0489,
+        "recall_uncovered": {
+          "value": 0.9286,
+          "n": 28,
+          "successes": 26,
+          "ci95": [
+            0.7735,
+            0.9802
+          ]
+        },
+        "false_alarm_covered": {
+          "value": 0.4722,
+          "n": 36,
+          "successes": 17,
+          "ci95": [
+            0.3199,
+            0.6299
+          ]
+        }
+      }
+    },
+    "top_score": {
+      "auc": 0.6994,
+      "covered_median": 0.03279,
+      "uncovered_median": 0.03227,
+      "operating_point": {
+        "threshold": 0.0328,
+        "recall_uncovered": {
+          "value": 1.0,
+          "n": 28,
+          "successes": 28,
+          "ci95": [
+            0.8794,
+            1.0
+          ]
+        },
+        "false_alarm_covered": {
+          "value": 1.0,
+          "n": 36,
+          "successes": 36,
+          "ci95": [
+            0.9036,
+            1.0
+          ]
+        }
+      }
+    },
+    "margin": {
+      "auc": 0.5119,
+      "covered_median": 0.00087,
+      "uncovered_median": 0.00053,
+      "operating_point": {
+        "threshold": 0.0023,
+        "recall_uncovered": {
+          "value": 0.9286,
+          "n": 28,
+          "successes": 26,
+          "ci95": [
+            0.7735,
+            0.9802
+          ]
+        },
+        "false_alarm_covered": {
+          "value": 0.9722,
+          "n": 36,
+          "successes": 35,
+          "ci95": [
+            0.8583,
+            0.9951
+          ]
+        }
+      }
+    }
+  },
+  "corpus": {
+    "ingested": [
+      "01-refunds-and-exchanges.md",
+      "02-ticket-transfers.md",
+      "03-event-cancellation-postponement.md",
+      "04-delivery-mobile-and-willcall.md",
+      "05-venue-bag-policy.md",
+      "06-venue-parking.md",
+      "07-accessibility.md",
+      "08-payment-and-billing.md",
+      "09-resale-and-face-value.md"
+    ]
+  }
+}

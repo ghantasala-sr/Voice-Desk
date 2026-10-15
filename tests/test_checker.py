@@ -184,3 +184,18 @@ def test_an_event_date_from_a_tool_result_grounds_the_answer() -> None:
     )
     assert checker.check("Your show is on November 14.").passed
     assert not checker.check("Your show is on November 21.").passed
+
+
+@pytest.mark.parametrize("sentence", [
+    "Could I get your order number and the email address on the order?",
+    "Would you like me to send them now?",
+    "Can I help with anything else?",
+    "Is there anything else I can do?",
+])
+def test_sentence_openers_are_not_proper_nouns(sentence: str) -> None:
+    """Found by the week-4 offline agent: "Could I" read as a name."""
+    assert checker_for("02").check(sentence).passed
+
+
+def test_invented_names_are_still_caught_after_the_opener_fix() -> None:
+    assert not checker_for("06").check("Could I suggest parking at Seaview Arena instead?").passed

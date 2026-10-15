@@ -8,9 +8,12 @@ confident.
 The engine is domain-agnostic. The reference deployment is Tier-1 phone support
 for a fictional event-ticketing company, *Tide & Tempo Tickets*.
 
-> **Status:** weeks 1–3 of 4 built. 307 tests, every reported number backed by a
-> run directory in [`results/`](results/). What is and is not verified is
-> spelled out in [WEEK1.md](WEEK1.md), [WEEK2.md](WEEK2.md), [WEEK3.md](WEEK3.md).
+> **Status:** all four weeks built, plus a web app. 366 tests; every reported
+> number is backed by a run directory in [`results/`](results/). What is and is
+> not verified is spelled out in [WEEK1.md](WEEK1.md), [WEEK2.md](WEEK2.md),
+> [WEEK3.md](WEEK3.md), [WEEK4.md](WEEK4.md). No API key was available while
+> building, so measured agent behaviour is from an **offline extractive agent**,
+> labelled as such everywhere.
 
 ---
 
@@ -41,6 +44,8 @@ flowchart LR
         BROWSER["Browser client<br/>mic + playback worklets"]
         PHONE["Phone - Twilio<br/>(stretch)"]
         TEXT["Text driver<br/>make chat / make script"]
+        WEB["Web app  /<br/>Talk · Insights · Results"]
+        SIM["Caller simulator<br/>personas × intents"]
     end
 
     subgraph audio["app/  —  audio domain (Pipecat)"]
@@ -62,7 +67,7 @@ flowchart LR
     end
 
     subgraph services["Providers and retrieval"]
-        LLM["LLMProvider<br/>Claude · OpenAI · replay"]
+        LLM["LLMProvider<br/>Claude · OpenAI · replay · extractive"]
         RET["Hybrid search<br/>BM25 + pgvector, RRF"]
         MOCK["Mock ticketing backend<br/>+ fault profiles"]
     end
@@ -77,6 +82,7 @@ flowchart LR
     subgraph observe["Observability"]
         JAEGER["Jaeger<br/>OTel traces"]
         CONSOLE["Live console<br/>/console · SSE"]
+        GAPR["Gap report +<br/>static report"]
     end
 
     BROWSER --> WS
@@ -85,6 +91,8 @@ flowchart LR
     VAD -.->|barge-in| BRIDGE
     BRIDGE <--> LOOP
     TEXT <--> LOOP
+    WEB <-->|/ws/chat| LOOP
+    SIM <--> LOOP
     LOOP --> TTS --> WS
 
     LOOP --> RET --> KB
@@ -102,17 +110,18 @@ flowchart LR
     CALLS --> CONSOLE
     LEDGER --> CONSOLE
     CV --> CONSOLE
+    CALLS --> GAPR
 ```
 
 | Layer | Choice | Why |
 |---|---|---|
 | Audio | Pipecat, Silero VAD | transport, VAD and barge-in events, nothing else |
-| LLM | Claude (default), OpenAI, deterministic replay | the replay provider makes the whole harness testable without a network |
+| LLM | Claude (default), OpenAI, deterministic replay, offline extractive | replay makes the harness testable without a network; extractive runs the whole system with no key, and says so |
 | STT | Deepgram (streaming), faster-whisper (local batch) | comparing them is a result in itself |
 | TTS | Cartesia | lowest time-to-first-byte, which sits inside the latency budget |
 | Retrieval | PostgreSQL + pgvector + full-text, BGE-small embeddings | hybrid, because policy text turns on exact terms like "will-call" |
 | State | PostgreSQL | calls, turns, events, the idempotency ledger, eval results |
-| Observability | OpenTelemetry → Jaeger, plus a live console over SSE | traces for one call, tables for many |
+| Observability | OpenTelemetry → Jaeger, a live console over SSE, a web app, a static HTML report | traces for one call, tables for many, provenance for every number |
 
 ---
 
@@ -434,7 +443,7 @@ flowchart LR
 
     subgraph runners["Runners"]
         TD["Text driver + replay LLM<br/>every commit"]
-        FI["Fault injection<br/>33 tests"]
+        FI["Fault injection<br/>34 tests"]
         CAL["Calibration<br/>retrieval · handoff · checker"]
         STTE["STT benchmark"]
         JUDGE["LLM judge<br/>3 shuffled runs, median"]
@@ -449,11 +458,12 @@ flowchart LR
     TD --> FI
     CAL & STTE & FI & JUDGE --> RES
 
-    subgraph loop["Week 4 — the feedback loop"]
-        SIM["Caller simulator<br/>personas × intents"] --> PG[("Postgres call log")]
-        PG --> GAP["Gap report<br/>cluster failures by intent"]
-        GAP --> FIX["Make ONE change<br/>e.g. ingest a held-out document"]
-        FIX --> SIM
+    subgraph loop["Week 4 — the feedback loop (make cycle)"]
+        CSIM["Caller simulator<br/>300 calls · fixed seed"] --> PG[("Postgres call log")]
+        PG --> GAP["Gap report<br/>actions ranked by troubled calls"]
+        GAP --> FIX["Apply ONE change<br/>ingest a held-out document"]
+        FIX -->|identical seeds| CSIM
+        GAP -.->|after the fact| LABELS["Hidden labels<br/>score the report"]
     end
     RES -.-> loop
 ```
@@ -461,6 +471,13 @@ flowchart LR
 Three of the twelve knowledge-base documents are **held out** at baseline. The
 week-4 gap report has to *discover* which missing topic is costing calls. That
 makes the before/after containment number earned rather than staged.
+
+It found all three, with the right diagnosis, at ranks 2, 4 and 5. The two actions
+above them were real problems nobody planted: refund questions retrieving the
+transfers document, and vague callers. Applying the top action that needed no
+human author (ingest the weather document) moved containment from **0.737 to
+0.793** on identical seeds, with the wrong-answer rate down, not up
+([`results/2026-10-15-feedback-cycle/`](results/2026-10-15-feedback-cycle/)).
 
 ---
 
@@ -481,31 +498,37 @@ number while making the agent interrupt people. Stage E is the cost the
 checker's existence imposes. It is measured on its own and never folded into
 the LLM stage.
 
-No live voice latency has been measured yet; that needs API keys. See §11.
+No live voice latency has been measured yet; that needs API keys. The static
+report refuses to render latency from any run that is not `timing_valid`. See §11.
 
 ---
 
 ## 11. Measured results
 
 All from [`results/`](results/). *n* is small throughout, and each run README
-says so.
+says so. `make report` renders all of this, with provenance, into
+`reports/index.html`.
 
 | What | Result |
 |---|---|
-| Duplicate side effects under fault injection | **0** across 33 fault tests, including commit-then-timeout and interruption mid-read-back |
-| Concurrent identical transfers, real Postgres | **5 → 1** effect, 1 committed row |
-| Handoff recall / precision (deterministic policy) | **0.86** [0.72, 0.93] / **0.80** [0.66, 0.89], up from recall 0.31 before calibration |
+| Duplicate side effects under fault injection | **0** across 34 fault tests, including commit-then-timeout, concurrent duplicates and interruption mid-read-back |
+| Concurrent identical transfers, real Postgres | **5 → 1** effect, 1 committed row (the race this exposed is fixed; WEEK4.md) |
+| Handoff recall / precision (deterministic policy) | **0.86** [0.72, 0.93] / **0.82** [0.68, 0.90], up from recall 0.31 before calibration |
 | Hard-rule handoffs | **0** LLM calls |
 | Checker: invented numbers / dates / entities | **23/23 · 5/5 · 4/4** caught |
 | Checker: fabricated policy claims | **7/8** caught |
 | Checker false positives | **2/46** |
 | Checker latency | p95 **0.07 ms** per sentence |
-| Retrieval, right document in the top 4 | **12/14** on caller phrasing |
+| Retrieval sufficiency signal | dense cosine AUC **0.93** vs fused RRF margin **0.51** |
+| Retrieval, right document top-1 / top-4 | **11/14 · 14/14** on caller phrasing |
 | STT key-entity accuracy, clean → 5 dB | **0.83 → 0.62** (WER only 0.025 → 0.052); spoken emails **0.67 → 0.43** |
+| Feedback cycle, containment *(300 simulated calls, offline agent)* | **0.737 → 0.793**, paired +17 / −0, McNemar p = 1.5 × 10⁻⁵ |
+| Feedback cycle, wrong-answer rate (guardrail) | **0.136 → 0.113** |
+| Gap report vs hidden labels | 3/3 planted gaps found (ranks 2, 4, 5), 1/3 in the top 3, cluster purity 0.985 |
 
 **Not yet measured:** live voice latency, the Deepgram comparison, answer
-correctness via the judge, and handoffs triggered by the live model's own
-answers. All of them need API keys.
+correctness via the judge, handoffs triggered by a live model's own answers, and
+the feedback cycle with Claude as the agent. All of them need API keys.
 
 ---
 
@@ -519,12 +542,23 @@ make retrieval && make ingest
 ```
 
 ```bash
-make test                 # 307 tests, ~20 s, no network
+make test                 # 366 tests, ~20 s, no network
 make faults               # fault-injection suite
 make demo-scripts         # four scripted demo beats, recorded to Postgres
-make dev                  # app on :8088 — console at http://localhost:8088/console
+make dev                  # web app at http://localhost:8088/ · voice client /voice · console /console
 make chat                 # text-mode REPL against the full stack
 ```
+
+```bash
+make simulate N=300       # simulated callers → results/<date>-simulation-<label>/
+make gap-report           # gap report on the latest simulation run
+make cycle                # baseline → gap report → ONE change → identical seeds
+make report               # reports/index.html from every results/*/metrics.json
+```
+
+With no `ANTHROPIC_API_KEY`, the web app, the voice pipeline and the simulator
+all fall back to the offline extractive agent, and say so in a banner and in
+every result.
 
 Ports avoid common collisions: 5434, 8088, 16687 and 4319 rather than 5432,
 8000, 16686 and 4317. All are overridable in `.env`.
@@ -534,20 +568,22 @@ Ports avoid common collisions: 5434, 8088, 16687 and 4319 rather than 5432,
 ## 13. Repository map
 
 ```
-app/            FastAPI, /ws, Pipecat wiring (the only pipecat import), console API + UI
+app/            FastAPI, /ws, Pipecat wiring (the only pipecat import), console, web app (/ws/chat, insights API)
 harness/        turn loop, state, checker, normalization, handoff, tools, read-back, assembly
-providers/      LLM (Claude, OpenAI, replay) · STT (Deepgram, faster-whisper, null) · TTS (Cartesia, null)
+providers/      LLM (Claude, OpenAI, replay, extractive) · STT (Deepgram, faster-whisper, null) · TTS (Cartesia, null)
 retrieval/      chunking, corpus linter, embeddings, ingestion, hybrid search
-analytics/      event writer (closed vocabulary), call and turn persistence
+analytics/      event writer (closed vocabulary), persistence, gap report, static report
 core/           settings, ids, clock, logging, db, tracing — depends on nothing of ours
 domains/        ticketing: 12-document corpus, tools.yaml, handoff.yaml, prompts.yaml
 eval/           text driver, dataset, metrics, calibration, checker seeding, synth,
-                noise, telephony, STT benchmark, judge, fault-injection suite
+                noise, telephony, STT benchmark, judge, fault-injection suite,
+                caller simulator, feedback cycle
 demo/           scripted demo beats
 migrations/     numbered SQL
 results/        one directory per measured run
+reports/        the rendered static report
 tests/          unit, integration, and architecture-contract tests
-docs/           design documents 00–16
+docs/           design documents 00–17
 ```
 
 ---
@@ -557,7 +593,7 @@ docs/           design documents 00–16
 | File | What it covers |
 |---|---|
 | [BUILD.md](BUILD.md) | The week-by-week plan: every task, its dependencies and acceptance criteria |
-| [WEEK1.md](WEEK1.md) · [WEEK2.md](WEEK2.md) · [WEEK3.md](WEEK3.md) | What was built, what was verified, what was not |
+| [WEEK1.md](WEEK1.md) · [WEEK2.md](WEEK2.md) · [WEEK3.md](WEEK3.md) · [WEEK4.md](WEEK4.md) | What was built, what was verified, what was not |
 | [PROJECT_SUMMARY.md](PROJECT_SUMMARY.md) | One-page summary and resume bullets backed by measurements |
 | [docs/00-decisions.md](docs/00-decisions.md) | Every locked decision, with rationale and reversal cost |
 | [docs/01-architecture.md](docs/01-architecture.md) | Component boundaries, turn data flow, latency budget |
@@ -576,6 +612,7 @@ docs/           design documents 00–16
 | [docs/14-analytics.md](docs/14-analytics.md) | Gap report and the feedback-cycle protocol |
 | [docs/15-results-and-claims.md](docs/15-results-and-claims.md) | Reporting rules and what the project can and cannot claim |
 | [docs/16-console.md](docs/16-console.md) | The live observability console |
+| [docs/17-frontend.md](docs/17-frontend.md) | The web app: views, endpoints, chat protocol, limits |
 
 ## The one rule
 

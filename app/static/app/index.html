@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>VoiceDesk</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<link rel="stylesheet" href="/static/app/app.css?v=2">
+
+<header class="top">
+  <a class="brand" href="#talk">VoiceDesk</a>
+  <nav aria-label="Views">
+    <a href="#talk" data-view="talk">Talk</a>
+    <a href="#voice" data-view="voice">Voice</a>
+    <a href="/console" class="ext" title="Live monitor of every call (opens the console)">Console ↗</a>
+    <a href="#insights" data-view="insights">Insights</a>
+    <a href="#results" data-view="results">Results</a>
+  </nav>
+  <span class="pills">
+    <span id="db-pill" class="pill" title="Postgres">db …</span>
+  </span>
+</header>
+
+<!-- ------------------------------------------------------------------ Talk -->
+<section id="view-talk" class="view talk" hidden>
+  <div id="agent-banner" class="banner" hidden></div>
+  <div class="talk-head">
+    <span class="scope">this call</span>
+    <span id="call-state" class="pill">not connected</span>
+    <span id="call-id" class="dim mono small"></span>
+    <span id="call-recorded" class="pill" hidden></span>
+    <button id="end-call" class="ghost small-btn" type="button" hidden>End call</button>
+  </div>
+  <div id="stack-line" class="dim small stack-line" hidden></div>
+
+  <div id="transcript" class="transcript" aria-live="polite">
+    <div id="talk-empty" class="empty-talk">
+      <p class="lead">Type to talk to the support agent for a ticketing company.</p>
+      <p class="dim">Same agent as the phone line: hybrid retrieval over the knowledge base,
+        tools against a mock ticketing backend, read-back before any change to an order,
+        a grounding checker on every sentence, and handoff to a human.
+        Open <b>details</b> under any reply to see why it said what it said.</p>
+    </div>
+  </div>
+
+  <div id="examples" class="examples" aria-label="Example prompts"></div>
+
+  <form id="composer" class="composer" autocomplete="off">
+    <label for="input" class="sr-only">Message</label>
+    <textarea id="input" rows="1" placeholder="Ask about refunds, tickets, the venue…" disabled></textarea>
+    <button id="send" type="submit" disabled>Send</button>
+  </form>
+  <div id="restart-row" class="restart-row" hidden>
+    <button id="restart" type="button">Start new call</button>
+  </div>
+</section>
+
+<!-- ----------------------------------------------------------------- Voice -->
+<section id="view-voice" class="view page" hidden>
+  <h1>Voice</h1>
+  <p class="dim">The live voice client: microphone → Deepgram STT → the same harness → Cartesia TTS.</p>
+  <div id="voice-body"><p class="dim">Checking configuration…</p></div>
+</section>
+
+<!-- -------------------------------------------------------------- Insights -->
+<section id="view-insights" class="view page" hidden>
+  <div class="page-head">
+    <h1>Insights</h1>
+    <span class="scope measured">measured runs</span>
+  </div>
+  <p class="dim">The week-4 loop: simulated calls are clustered into a gap report, the top gap
+    is fixed, and a feedback cycle re-runs the same callers to measure the change.
+    Simulated calls, not real ones.</p>
+
+  <h2>Latest gap report</h2>
+  <div id="gap-body"><p class="dim">Loading…</p></div>
+
+  <h2>Latest feedback cycle</h2>
+  <div id="cycle-body"><p class="dim">Loading…</p></div>
+</section>
+
+<!-- --------------------------------------------------------------- Results -->
+<section id="view-results" class="view page" hidden>
+  <div class="page-head">
+    <h1>Results</h1>
+    <span class="scope measured">measured runs</span>
+  </div>
+  <div id="results-list">
+    <p class="dim">One card per <code>results/&lt;run&gt;/</code> directory. Numbers are from
+      each run's <code>metrics.json</code>, with their n.</p>
+    <div id="results-grid" class="cards"></div>
+  </div>
+  <div id="result-detail" hidden></div>
+</section>
+
+<div id="tooltip" class="tooltip" role="tooltip" hidden></div>
+
+<script src="/static/app/markdown.js?v=2"></script>
+<script src="/static/app/charts.js?v=2"></script>
+<script src="/static/app/app.js?v=3"></script>
+</html>

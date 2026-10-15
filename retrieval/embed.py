@@ -101,12 +101,22 @@ class HashEmbedder:
         return [self._vector(text) for text in texts]
 
 
+_EMBEDDERS: dict[str, Embedder] = {}
+
+
 def get_embedder(settings: Settings) -> Embedder:
-    """The real embedder, or the hash stand-in if it is not installed."""
+    """The real embedder, or the hash stand-in if it is not installed.
+
+    One instance per model name for the life of the process: loading BGE takes
+    a second or more and blocks the event loop, and the web app builds a stack
+    per chat connection."""
     if settings.embed_model == "hash-test-only":
         return HashEmbedder()
+    if settings.embed_model in _EMBEDDERS:
+        return _EMBEDDERS[settings.embed_model]
     try:
-        return SentenceTransformerEmbedder(settings.embed_model)
+        embedder = _EMBEDDERS[settings.embed_model] = SentenceTransformerEmbedder(settings.embed_model)
+        return embedder
     except ImportError as exc:
         raise RuntimeError(
             f"{settings.embed_model} needs sentence-transformers. Run `make retrieval`, "

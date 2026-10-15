@@ -433,6 +433,10 @@ async def event_stream(
             cursor = row["event_id"]
             yield _sse_frame(row)
             sent += 1
+            # Stop mid-batch, not at the next poll: a client that left must
+            # not be sent the rest of a batch fetched before it went.
+            if await request.is_disconnected():
+                return
 
         now = time.monotonic()
         if sent:

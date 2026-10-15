@@ -1,0 +1,161 @@
+# Intent mix for simulated callers. docs/13 §3.
+#
+# Weighted, not uniform: real call mixes are long-tailed, and a uniform mix
+# would make every gap-report cluster the same size and the ranking meaningless.
+# About 13% of volume lands on topics only HELD-OUT documents cover, concentrated
+# in group bookings — the gap report should find that one first. Whether it
+# does is a real test of the clustering, not a foregone conclusion.
+#
+# `gold_docs` and `covered` are the HIDDEN answer key. They are written into a
+# `simulation_label` event that the gap report is not allowed to read.
+version: 1
+intents:
+  - id: where_are_my_tickets
+    weight: 0.18
+    covered: true
+    transactional: lookup
+    order: {order_id: TK-88213, email: sam@example.com}
+    openings:
+      - "Where are my tickets?"
+      - "I can't find my tickets anywhere."
+      - "Hi, I'm trying to work out where my tickets went."
+      - "Can you tell me which seats I've got?"
+      - "I need to check my tickets for Saturday."
+    vague:
+      - "Hi, um, it's about my order."
+      - "I'm a bit lost with my booking."
+
+  - id: refund_request
+    weight: 0.15
+    covered: true
+    gold_docs: [01-refunds-and-exchanges.md]
+    openings:
+      - "Can I get a refund if I can't make it?"
+      - "Something came up and I can't go. Do I get my money back?"
+      - "I'd like my money back for my tickets."
+      - "What's your refund policy?"
+      - "How long does a refund take to come through?"
+    vague:
+      - "I need to sort something out with my payment, I can't go anymore."
+      - "It's about getting money back."
+
+  - id: ticket_transfer
+    weight: 0.12
+    covered: true
+    transactional: transfer
+    order: {order_id: TK-88213, email: sam@example.com}
+    recipient: friend@example.com
+    quantity: 2
+    openings:
+      - "I want to send two tickets to my friend at friend@example.com."
+      - "Can you transfer two of my tickets to friend@example.com?"
+      - "I need to give two tickets to my friend, the email is friend@example.com."
+    vague:
+      - "My friend needs some of my tickets."
+
+  - id: event_status
+    weight: 0.10
+    covered: true
+    transactional: lookup
+    order: {order_id: TK-51900, email: lee+tickets@example.com}
+    openings:
+      - "Is my show still happening?"
+      - "I heard the summer opener might be cancelled. Is it still on?"
+      - "Can you check if my event is still on?"
+    vague:
+      - "I saw something about my show online."
+
+  - id: delivery_problem
+    weight: 0.09
+    covered: true
+    gold_docs: [04-delivery-mobile-and-willcall.md]
+    openings:
+      - "My tickets aren't showing up in the app."
+      - "The app says I have an order but there are no tickets in it."
+      - "How does will call pickup work?"
+      - "When will my tickets actually show up?"
+    vague:
+      - "The app isn't working for me."
+
+  - id: venue_logistics
+    weight: 0.08
+    covered: true
+    gold_docs: [05-venue-bag-policy.md, 06-venue-parking.md]
+    openings:
+      - "What size bag can I bring in?"
+      - "Is there parking at Harbour Pavilion?"
+      - "Can I bring a backpack to the show?"
+      - "Where do the Ubers pick up after the concert?"
+      - "How much is parking at the venue?"
+    vague:
+      - "What do I need to know before I get to the venue?"
+
+  - id: payment_question
+    weight: 0.06
+    covered: true
+    gold_docs: [08-payment-and-billing.md]
+    openings:
+      - "Why was my card declined?"
+      - "I think I've been charged twice."
+      - "Do you take Apple Pay?"
+      - "What's this processing fee on my order?"
+    vague:
+      - "Something looks off with my payment."
+
+  - id: resale_question
+    weight: 0.05
+    covered: true
+    gold_docs: [09-resale-and-face-value.md]
+    openings:
+      - "Can I resell my tickets?"
+      - "Can I sell my tickets for more than I paid?"
+      - "When do I get paid if my tickets sell?"
+    vague:
+      - "I want to get rid of my tickets somehow."
+
+  - id: accessibility
+    weight: 0.04
+    covered: partial
+    gold_docs: [07-accessibility.md]
+    openings:
+      - "How do I book a wheelchair space?"
+      - "Can I bring my service dog?"
+      - "Do you have assistive listening devices?"
+    vague:
+      - "I have some accessibility needs for the show."
+
+  # --- topics only HELD-OUT documents cover --------------------------------
+  - id: group_booking_vip
+    weight: 0.06
+    covered: false
+    gold_docs: [10-group-and-vip-packages.md]
+    openings:
+      - "What's included in the VIP package?"
+      - "We're a group of fourteen. Is there a group discount?"
+      - "Do you do group bookings for a work outing?"
+      - "How much is a hospitality suite?"
+      - "Can I upgrade my tickets to VIP?"
+    vague:
+      - "We want to make it a bit special for a big group."
+
+  - id: weather_outdoor
+    weight: 0.04
+    covered: false
+    gold_docs: [11-weather-and-outdoor-events.md]
+    openings:
+      - "Does the outdoor show go ahead if it rains?"
+      - "What happens if there's lightning during the concert?"
+      - "Is the amphitheatre show cancelled for bad weather?"
+    vague:
+      - "I'm worried about the forecast for Friday."
+
+  - id: age_restriction_id
+    weight: 0.03
+    covered: false
+    gold_docs: [12-age-restrictions-and-id.md]
+    openings:
+      - "Is the club night eighteen plus?"
+      - "Can my sixteen year old come in with me?"
+      - "What ID do I need for the late show?"
+    vague:
+      - "Is it okay to bring my teenager?"

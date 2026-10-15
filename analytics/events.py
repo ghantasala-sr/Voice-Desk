@@ -28,7 +28,7 @@ EVENT_TYPES: frozenset[str] = frozenset(
         # turn lifecycle
         "turn_started", "turn_completed", "budget_exceeded",
         # speech recognition
-        "stt_partial", "stt_final", "silence_reprompt",
+        "stt_final", "silence_reprompt",
         # retrieval (week 2)
         "retrieval_completed",
         # generation
@@ -60,8 +60,14 @@ URGENT_EVENTS: frozenset[str] = frozenset(
     }
 )
 
-# In tests, an unknown event type should fail loudly rather than drift.
-STRICT = os.environ.get("PYTEST_CURRENT_TEST") is not None
+def strict() -> bool:
+    """In tests, an unknown event type should fail loudly rather than drift.
+
+    Read at call time: pytest sets PYTEST_CURRENT_TEST per test, AFTER modules
+    are imported. As an import-time constant this was always False, so for
+    three weeks no test could ever have failed on an unknown type (found by
+    the W4-2 audit)."""
+    return os.environ.get("PYTEST_CURRENT_TEST") is not None
 
 
 class EventWriter(Protocol):
@@ -76,7 +82,7 @@ def validate(event_type: str) -> None:
     if event_type in EVENT_TYPES:
         return
     message = f"unknown event_type {event_type!r}; add it to analytics.events.EVENT_TYPES"
-    if STRICT:
+    if strict():
         raise ValueError(message)
     log.warning("unknown_event_type", event_type=event_type)
 

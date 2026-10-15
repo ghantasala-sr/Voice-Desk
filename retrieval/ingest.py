@@ -74,8 +74,17 @@ def corpus_hash(entries: list[tuple[str, str]]) -> str:
     return hashlib.sha256(payload.encode()).hexdigest()[:16]
 
 
-async def ingest(domain: str, *, settings: Settings, force: bool = False) -> IngestReport:
+async def ingest(
+    domain: str, *, settings: Settings, force: bool = False,
+    overrides: dict[str, bool] | None = None,
+) -> IngestReport:
+    """`overrides` flips a document's `ingested` flag for this run only — how
+    the week-4 feedback cycle applies its one change without editing the
+    manifest that defines the documented baseline."""
     manifest = load_manifest(domain)
+    for entry in manifest["documents"]:
+        if overrides and entry["path"] in overrides:
+            entry["ingested"] = overrides[entry["path"]]
     corpus_dir = DOMAINS_ROOT / domain / "corpus"
     embedder = get_embedder(settings)
 

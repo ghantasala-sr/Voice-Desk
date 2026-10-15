@@ -1,6 +1,7 @@
 """FastAPI app: the browser client, the WebSocket endpoint, and health.
 
-Run with `make dev`, then open http://localhost:8000.
+Run with `make dev`, then open http://localhost:$(APP_PORT) (8088 here): `/` is the
+web app, `/voice` the original browser voice client, `/console` the live console.
 
 The WebSocket handler is thin on purpose. It opens a CallState, starts the
 Pipecat pipeline, and forwards harness commands to the browser. All decisions
@@ -17,6 +18,8 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
+from app.chat import router as chat_router
+from app.insights import router as insights_router
 from app.observe import router as observe_router
 from core import db
 from core.logging import configure_logging, get_logger
@@ -58,6 +61,8 @@ async def lifespan(app: FastAPI) -> Any:
 app = FastAPI(title="VoiceDesk", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=STATIC), name="static")
 app.include_router(observe_router)
+app.include_router(chat_router)
+app.include_router(insights_router)
 
 
 @app.api_route("/health", methods=["GET", "HEAD"])
@@ -77,6 +82,11 @@ async def health() -> dict[str, Any]:
 # HEAD too: preview tools and load balancers health-check with HEAD.
 @app.api_route("/", methods=["GET", "HEAD"])
 async def index() -> FileResponse:
+    return FileResponse(STATIC / "app" / "index.html")
+
+
+@app.api_route("/voice", methods=["GET", "HEAD"])
+async def voice() -> FileResponse:
     return FileResponse(STATIC / "index.html")
 
 

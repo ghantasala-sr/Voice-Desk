@@ -201,3 +201,21 @@ async def test_empty_retrieval_says_so_rather_than_returning_nothing(ctx) -> Non
     )
     assert result.is_empty
     assert "nothing relevant" in result.knowledge_block()
+
+
+async def test_top_vec_score_is_the_best_dense_cosine_not_the_fused_leader(ctx) -> None:
+    """Week-4 bug: top_vec_score read the cosine of the FUSED rank-1 chunk, so
+    a lexical tie decided the sufficiency signal. It must be the maximum."""
+    for question in ("My friend needs some of my tickets.", "can I get my money back",
+                     "where do I park", "Something looks off with my payment."):
+        result = await _run(ctx, question)
+        dense = [c.vec_score for c in result.chunks if c.vec_score is not None]
+        assert result.top_vec_score == max(dense)
+        assert result.vec_margin == pytest.approx(sorted(dense)[-1] - sorted(dense)[-2])
+
+
+async def test_search_is_deterministic(ctx) -> None:
+    question = "My friend needs some of my tickets."
+    first = [c.chunk_id for c in (await _run(ctx, question)).chunks]
+    for _ in range(5):
+        assert [c.chunk_id for c in (await _run(ctx, question)).chunks] == first

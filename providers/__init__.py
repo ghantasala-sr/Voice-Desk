@@ -16,6 +16,16 @@ from providers.stt.base import STTProvider
 from providers.tts.base import TTSProvider
 
 
+def offline_fallback(settings: Settings) -> Settings:
+    """Claude when a key is set; otherwise the offline extractive agent.
+
+    Every result and the web app say which one ran — a fallback that is not
+    reported would make offline numbers look like Claude's."""
+    if settings.llm_provider == "anthropic" and not settings.anthropic_api_key:
+        return settings.model_copy(update={"llm_provider": "extractive"})
+    return settings
+
+
 def build_llm(settings: Settings, **kwargs: Any) -> LLMProvider:
     match settings.llm_provider:
         case "anthropic":
@@ -30,6 +40,10 @@ def build_llm(settings: Settings, **kwargs: Any) -> LLMProvider:
             from providers.llm.replay import ReplayProvider
 
             return ReplayProvider(**kwargs)
+        case "extractive":
+            from providers.llm.extractive import ExtractiveProvider
+
+            return ExtractiveProvider()
         case other:  # pragma: no cover - guarded by the Literal type
             raise ValueError(f"unknown LLM provider: {other}")
 

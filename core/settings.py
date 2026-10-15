@@ -15,7 +15,7 @@ from typing import Literal
 from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-LLMProviderName = Literal["anthropic", "openai", "replay"]
+LLMProviderName = Literal["anthropic", "openai", "replay", "extractive"]
 STTProviderName = Literal["deepgram", "faster_whisper", "null"]
 TTSProviderName = Literal["cartesia", "null"]
 

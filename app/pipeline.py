@@ -43,7 +43,7 @@ from harness.events import (
 )
 from harness.loop import Harness
 from harness.state import CallState
-from providers import build_llm, config_snapshot
+from providers import build_llm, config_snapshot, offline_fallback
 
 log = get_logger(__name__)
 
@@ -80,7 +80,7 @@ async def run_call(websocket: Any, *, settings: Settings) -> None:
 
     stream = EventStream()
     harness = Harness(
-        llm=build_llm(settings), settings=settings, clock=SystemClock(),
+        llm=build_llm(offline_fallback(settings)), settings=settings, clock=SystemClock(),
         retriever=stack.retriever, executor=stack.executor, similarity=stack.similarity,
     )
     session = _Session(

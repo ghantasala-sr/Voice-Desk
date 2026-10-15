@@ -127,6 +127,13 @@ class Ledger(Protocol):
 
     async def get_by_key(self, key: str) -> ToolExecution | None: ...
     async def update(self, e: ToolExecution) -> None: ...
+
+    async def claim_dispatch(self, e: ToolExecution) -> bool:
+        """pending -> dispatched as ONE compare-and-set. False if another
+        dispatcher got there first. The unique index guards the insert; this
+        guards the transition — without it, two concurrent duplicates that
+        both saw `pending` would both reach the backend."""
+
     async def unresolved(self) -> list[ToolExecution]: ...
 
 
@@ -153,6 +160,14 @@ class InMemoryLedger:
 
     async def update(self, e: ToolExecution) -> None:
         self.rows[e.execution_id] = e
+
+    async def claim_dispatch(self, e: ToolExecution) -> bool:
+        async with self._lock:
+            current = self.rows.get(e.execution_id)
+            if current is None or current.status != "pending":
+                return False
+            self.rows[e.execution_id] = e
+            return True
 
     async def unresolved(self) -> list[ToolExecution]:
         return [e for e in self.rows.values() if e.status in ("dispatched", "unknown")]
@@ -221,6 +236,20 @@ class PostgresLedger:
                 "error": e.error_type, "id": e.execution_id,
             },
         )
+
+    async def claim_dispatch(self, e: ToolExecution) -> bool:
+        from core.db import fetch_one
+
+        row = await fetch_one(
+            """
+            UPDATE tool_executions
+               SET status = 'dispatched', attempt = %(attempt)s, dispatched_at = now()
+             WHERE execution_id = %(id)s AND status = 'pending'
+            RETURNING execution_id
+            """,
+            {"attempt": e.attempt, "id": e.execution_id},
+        )
+        return row is not None
 
     async def unresolved(self) -> list[ToolExecution]:
         from core.db import fetch_all
@@ -327,7 +356,10 @@ class ToolExecutor:
         # Write the transition BEFORE the outbound call. If we die mid-call,
         # the ledger must say `dispatched` so the sweep can reconcile it.
         execution = replace(execution, status="dispatched", dispatched_at_ms=self.clock.now_ms())
-        await self.ledger.update(execution)
+        if not await self.ledger.claim_dispatch(execution):
+            # A concurrent identical action claimed it first. Never send a
+            # second request: wait for that one and report its outcome.
+            return await self._follow(call, prepared)
         _replace_in_call(call, execution)
 
         try:
@@ -412,6 +444,17 @@ class ToolExecutor:
         await self.ledger.update(resolved)
         _replace_in_call(call, resolved)
         return Outcome(resolved, status, response, error_type)
+
+    async def _follow(self, call: CallState, prepared: Prepared) -> Outcome:
+        current = await self.ledger.get_by_key(prepared.execution.idempotency_key)
+        if current is None:  # pragma: no cover - the row was claimed, so it exists
+            raise ToolError("bad_state", "claimed execution vanished")
+        if current.status == "dispatched":
+            current = await self._await_in_flight(current, prepared.tool)
+        _replace_in_call(call, current)
+        if current.status == "committed":
+            return Outcome(current, "committed", current.response, duplicate_suppressed=True)
+        return Outcome(current, current.status, None, current.error_type or current.status)
 
     async def _await_in_flight(self, execution: ToolExecution, tool: ToolSpec) -> ToolExecution:
         """An identical call is already dispatched. Wait for it rather than

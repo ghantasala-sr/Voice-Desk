@@ -87,6 +87,27 @@ faults:  ## Fault-injection suite (docs/12 §7)
 	$(PY) -m pytest eval/fault_injection -q
 
 # ---------------------------------------------------------------------------
+# Week 4 — simulated callers, gap report, feedback cycle, static report
+# Without ANTHROPIC_API_KEY these use the offline extractive agent, and every
+# result records which agent ran.
+# ---------------------------------------------------------------------------
+N ?= 300
+LABEL ?= baseline
+SEED ?= 20261015
+
+simulate:  ## Simulated callers: make simulate N=300 LABEL=baseline
+	$(PY) -m eval.caller_sim.simulate --n $(N) --label $(LABEL) --seed $(SEED)
+
+gap-report:  ## Gap report on a simulation run: make gap-report RUN=<run id> (default: latest)
+	$(PY) -m analytics.gap_report $(if $(RUN),--run $(RUN),)
+
+cycle:  ## One feedback cycle: baseline, gap report, ONE change, identical seeds
+	$(PY) -m eval.feedback_cycle --n $(N) --seed $(SEED)
+
+report:  ## Render reports/index.html from results/*/metrics.json
+	$(PY) -m analytics.report
+
+# ---------------------------------------------------------------------------
 # Checks — run before every commit
 # ---------------------------------------------------------------------------
 

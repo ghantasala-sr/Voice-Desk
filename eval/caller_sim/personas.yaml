@@ -1,0 +1,21 @@
+# Behavioural personas. docs/13 §2.
+#
+# Behaviour only — how a caller talks to the agent, never who they are. Each
+# field drives a rule in simulate.py:
+#
+#   details_upfront   chance a transactional caller gives order number + email
+#                     in the first sentence
+#   vague             chance of opening with an indirect description
+#   rephrase          chance of rephrasing when the answer did not help
+#                     (otherwise the caller gives up and hangs up)
+#   interrupts        chance of cutting in while the agent's reply is playing
+#   human_after       ask for a person after this many unhelpful turns
+#   misstate_once     gets one digit of the order number wrong the first time
+version: 1
+personas:
+  - {id: direct,     weight: 0.30, details_upfront: 0.8, vague: 0.0, rephrase: 0.2, interrupts: 0.05, human_after: 4}
+  - {id: vague,      weight: 0.20, details_upfront: 0.0, vague: 0.7, rephrase: 0.6, interrupts: 0.10, human_after: 4}
+  - {id: rushed,     weight: 0.15, details_upfront: 0.6, vague: 0.0, rephrase: 0.4, interrupts: 0.45, human_after: 3}
+  - {id: frustrated, weight: 0.15, details_upfront: 0.5, vague: 0.2, rephrase: 0.8, interrupts: 0.25, human_after: 2}
+  - {id: detailed,   weight: 0.12, details_upfront: 0.9, vague: 0.0, rephrase: 0.3, interrupts: 0.05, human_after: 4}
+  - {id: confused,   weight: 0.08, details_upfront: 0.3, vague: 0.4, rephrase: 0.7, interrupts: 0.02, human_after: 4, misstate_once: true}

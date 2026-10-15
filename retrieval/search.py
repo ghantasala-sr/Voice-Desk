@@ -67,19 +67,20 @@ WITH q AS (
 ),
 lex AS (
   SELECT c.chunk_id,
-         ROW_NUMBER() OVER (ORDER BY ts_rank_cd(c.tsv, q.qts) DESC) AS rank,
+         ROW_NUMBER() OVER (ORDER BY ts_rank_cd(c.tsv, q.qts) DESC, c.chunk_id) AS rank,
          ts_rank_cd(c.tsv, q.qts) AS raw
   FROM chunks c, q
   WHERE c.domain_config = %(domain)s AND c.tsv @@ q.qts
+  ORDER BY ts_rank_cd(c.tsv, q.qts) DESC, c.chunk_id
   LIMIT %(candidates)s
 ),
 vec AS (
   SELECT c.chunk_id,
-         ROW_NUMBER() OVER (ORDER BY c.embedding <=> q.qvec) AS rank,
+         ROW_NUMBER() OVER (ORDER BY c.embedding <=> q.qvec, c.chunk_id) AS rank,
          1 - (c.embedding <=> q.qvec) AS raw
   FROM chunks c, q
   WHERE c.domain_config = %(domain)s
-  ORDER BY c.embedding <=> q.qvec
+  ORDER BY c.embedding <=> q.qvec, c.chunk_id
   LIMIT %(candidates)s
 )
 SELECT c.chunk_id, c.doc_id, d.path AS doc_path, c.heading_path, c.text,
@@ -92,7 +93,9 @@ JOIN documents d ON d.doc_id = c.doc_id
 LEFT JOIN lex ON lex.chunk_id = c.chunk_id
 LEFT JOIN vec ON vec.chunk_id = c.chunk_id
 WHERE lex.chunk_id IS NOT NULL OR vec.chunk_id IS NOT NULL
-ORDER BY fused_score DESC
+-- Ties are common (equal ts_rank_cd values) and Postgres breaks them by
+-- physical row order, which a re-ingest changes. Break them explicitly.
+ORDER BY fused_score DESC, vec.rank NULLS LAST, c.chunk_id
 LIMIT %(top_k)s
 """
 
@@ -216,7 +219,11 @@ async def search(
     top = chunks[0].fused_score if chunks else 0.0
     second = chunks[1].fused_score if len(chunks) > 1 else 0.0
 
-    dense = [c.vec_score for c in chunks if c.vec_score is not None]
+    # Sorted, not in fused order: top_vec_score is the best dense cosine
+    # among the results. Until week 4 this read dense[0] in FUSED order, so a
+    # lexical tie could swap which chunk's cosine became the "sufficiency
+    # signal" — the same query scored 0.670 in one run and 0.621 in the next.
+    dense = sorted((c.vec_score for c in chunks if c.vec_score is not None), reverse=True)
     lexical = [c.lex_score for c in chunks if c.lex_score is not None]
 
     return RetrievalResult(
